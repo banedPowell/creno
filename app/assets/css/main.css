@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+/* Smooth scrolling for poll grid on mobile */
+.overflow-x-auto {
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+}
+
+/* Calendar drag prevention */
+.select-none * {
+	-webkit-user-select: none;
+	user-select: none;
+}
