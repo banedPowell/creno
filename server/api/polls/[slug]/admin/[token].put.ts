@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
 
 	const db = useDB();
 
-	const poll = db
+	const poll = await db
 		.select()
 		.from(polls)
 		.where(and(eq(polls.slug, slug), eq(polls.adminToken, token)))
@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
 	}
 
 	if (body.title !== undefined || body.description !== undefined || body.closedAt !== undefined) {
-		db.update(polls)
+		await db.update(polls)
 			.set({
 				...(body.title !== undefined && { title: body.title }),
 				...(body.description !== undefined && { description: body.description }),
@@ -33,23 +33,21 @@ export default defineEventHandler(async (event) => {
 					closedAt: body.closedAt ? new Date(body.closedAt) : null,
 				}),
 			})
-			.where(eq(polls.id, poll.id))
-			.run();
+			.where(eq(polls.id, poll.id));
 	}
 
 	if (body.slots && Array.isArray(body.slots)) {
-		db.delete(timeSlots).where(eq(timeSlots.pollId, poll.id)).run();
+		await db.delete(timeSlots).where(eq(timeSlots.pollId, poll.id));
 
 		for (const slot of body.slots) {
-			db.insert(timeSlots)
+			await db.insert(timeSlots)
 				.values({
 					id: nanoid(),
 					pollId: poll.id,
 					date: slot.date,
 					startTime: slot.startTime,
 					endTime: slot.endTime,
-				})
-				.run();
+				});
 		}
 	}
 

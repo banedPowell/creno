@@ -12,12 +12,12 @@ export default defineEventHandler(async (event) => {
 
 	const db = useDB();
 
-	const poll = db.select().from(polls).where(eq(polls.slug, slug)).get();
+	const poll = await db.select().from(polls).where(eq(polls.slug, slug)).get();
 	if (!poll) {
 		throw createError({ statusCode: 404, statusMessage: 'Poll not found' });
 	}
 
-	const participant = db
+	const participant = await db
 		.select()
 		.from(participants)
 		.where(eq(participants.id, participantId))
@@ -27,9 +27,8 @@ export default defineEventHandler(async (event) => {
 		throw createError({ statusCode: 404, statusMessage: 'Participant not found' });
 	}
 
-	db.delete(participants)
-		.where(eq(participants.id, participantId))
-		.run();
+	await db.delete(participants)
+		.where(eq(participants.id, participantId));
 
 	return { success: true };
 });

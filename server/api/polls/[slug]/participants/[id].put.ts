@@ -19,7 +19,7 @@ export default defineEventHandler(async (event) => {
 
 	const db = useDB();
 
-	const poll = db.select().from(polls).where(eq(polls.slug, slug)).get();
+	const poll = await db.select().from(polls).where(eq(polls.slug, slug)).get();
 	if (!poll) {
 		throw createError({ statusCode: 404, statusMessage: 'Poll not found' });
 	}
@@ -28,7 +28,7 @@ export default defineEventHandler(async (event) => {
 		throw createError({ statusCode: 403, statusMessage: 'Poll is closed' });
 	}
 
-	const participant = db
+	const participant = await db
 		.select()
 		.from(participants)
 		.where(eq(participants.id, participantId))
@@ -39,34 +39,31 @@ export default defineEventHandler(async (event) => {
 	}
 
 	if (body.name) {
-		db.update(participants)
+		await db.update(participants)
 			.set({ name: body.name })
-			.where(eq(participants.id, participantId))
-			.run();
+			.where(eq(participants.id, participantId));
 	}
 
 	if (body.responses && Array.isArray(body.responses)) {
-		const slots = db
+		const slots = await db
 			.select()
 			.from(timeSlots)
 			.where(eq(timeSlots.pollId, poll.id))
 			.all();
 		const slotIds = new Set(slots.map((s) => s.id));
 
-		db.delete(responses)
-			.where(eq(responses.participantId, participantId))
-			.run();
+		await db.delete(responses)
+			.where(eq(responses.participantId, participantId));
 
 		for (const resp of body.responses) {
 			if (!slotIds.has(resp.timeSlotId)) continue;
-			db.insert(responses)
+			await db.insert(responses)
 				.values({
 					id: nanoid(),
 					participantId,
 					timeSlotId: resp.timeSlotId,
 					availability: resp.availability,
-				})
-				.run();
+				});
 		}
 	}
 

@@ -4,4 +4,12 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ["~/assets/css/main.css"],
   modules: ["@nuxt/ui"],
+
+  $production: {
+    nitro: {
+      alias: {
+        "@libsql/client": "@libsql/client/http",
+      },
+    },
+  },
 });

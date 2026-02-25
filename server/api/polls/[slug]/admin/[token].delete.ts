@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
 
 	const db = useDB();
 
-	const poll = db
+	const poll = await db
 		.select()
 		.from(polls)
 		.where(and(eq(polls.slug, slug), eq(polls.adminToken, token)))
@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
 		throw createError({ statusCode: 404, statusMessage: 'Poll not found or invalid admin token' });
 	}
 
-	db.delete(polls).where(eq(polls.id, poll.id)).run();
+	await db.delete(polls).where(eq(polls.id, poll.id));
 
 	return { success: true };
 });

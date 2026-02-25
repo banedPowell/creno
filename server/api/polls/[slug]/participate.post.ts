@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
 
 	const db = useDB();
 
-	const poll = db.select().from(polls).where(eq(polls.slug, slug)).get();
+	const poll = await db.select().from(polls).where(eq(polls.slug, slug)).get();
 	if (!poll) {
 		throw createError({ statusCode: 404, statusMessage: 'Poll not found' });
 	}
@@ -34,7 +34,7 @@ export default defineEventHandler(async (event) => {
 		throw createError({ statusCode: 403, statusMessage: 'Poll is closed' });
 	}
 
-	const slots = db
+	const slots = await db
 		.select()
 		.from(timeSlots)
 		.where(eq(timeSlots.pollId, poll.id))
@@ -42,24 +42,22 @@ export default defineEventHandler(async (event) => {
 	const slotIds = new Set(slots.map((s) => s.id));
 
 	const participantId = nanoid();
-	db.insert(participants)
+	await db.insert(participants)
 		.values({
 			id: participantId,
 			pollId: poll.id,
 			name: body.name,
-		})
-		.run();
+		});
 
 	for (const resp of body.responses) {
 		if (!slotIds.has(resp.timeSlotId)) continue;
-		db.insert(responses)
+		await db.insert(responses)
 			.values({
 				id: nanoid(),
 				participantId,
 				timeSlotId: resp.timeSlotId,
 				availability: resp.availability,
-			})
-			.run();
+			});
 	}
 
 	return { participantId };

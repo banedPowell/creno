@@ -15,19 +15,19 @@ export default defineEventHandler(async (event) => {
 
 	const db = useDB();
 
-	const poll = db.select().from(polls).where(eq(polls.slug, slug)).get();
+	const poll = await db.select().from(polls).where(eq(polls.slug, slug)).get();
 
 	if (!poll) {
 		throw createError({ statusCode: 404, statusMessage: 'Poll not found' });
 	}
 
-	const slots = db
+	const slots = await db
 		.select()
 		.from(timeSlots)
 		.where(eq(timeSlots.pollId, poll.id))
 		.all();
 
-	const participantList = db
+	const participantList = await db
 		.select()
 		.from(participants)
 		.where(eq(participants.pollId, poll.id))
@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
 
 	let responseList: (typeof responses.$inferSelect)[] = [];
 	if (participantIds.length > 0) {
-		responseList = db.select().from(responses).all().filter(
+		responseList = (await db.select().from(responses).all()).filter(
 			(r) => participantIds.includes(r.participantId),
 		);
 	}

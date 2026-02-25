@@ -18,7 +18,7 @@ export default defineEventHandler(async (event) => {
 	const adminToken = nanoid(20);
 	const slotDuration = body.slotDuration || 60;
 
-	db.insert(polls)
+	await db.insert(polls)
 		.values({
 			id: pollId,
 			title: body.title,
@@ -26,19 +26,17 @@ export default defineEventHandler(async (event) => {
 			slug,
 			adminToken,
 			slotDuration,
-		})
-		.run();
+		});
 
 	for (const slot of body.slots) {
-		db.insert(timeSlots)
+		await db.insert(timeSlots)
 			.values({
 				id: nanoid(),
 				pollId,
 				date: slot.date,
 				startTime: slot.startTime,
 				endTime: slot.endTime,
-			})
-			.run();
+			});
 	}
 
 	return {
