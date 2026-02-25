@@ -10,24 +10,10 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
-    "@libsql/client": "^0.17.0",
-    "@nuxt/ui": "4.4.0",
-    "drizzle-orm": "^0.45.1",
-    "nanoid": "^5.1.6",
+    "@compodium/nuxt": "0.1.0-beta.12",
+    "@nuxt/ui": "4.5.0",
     "nuxt": "^4.3.1",
     "vue": "^3.5.28",
     "vue-router": "^4.6.4"
-  },
-  "devDependencies": {
-    "@iconify-json/lucide": "^1.2.90",
-    "drizzle-kit": "^0.31.9",
-    "prettier": "^3.8.1",
-    "prettier-plugin-tailwindcss": "^0.7.2",
-    "tailwindcss": "^4.1.18"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild"
-    ]
   }
 }
