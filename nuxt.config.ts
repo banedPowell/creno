@@ -4,4 +4,9 @@ export default defineNuxtConfig({
 	devtools: { enabled: true },
 	css: ['~/assets/css/main.css'],
 	modules: ['@nuxt/ui', '@compodium/nuxt'],
+
+	runtimeConfig: {
+		tursoUrl: process.env.TURSO_DATABASE_URL,
+		tursoToken: process.env.TURSO_AUTH_TOKEN,
+	},
 });
