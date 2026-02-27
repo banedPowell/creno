@@ -14,13 +14,12 @@ export const pollsTable = sqliteTable('polls', {
 		.notNull()
 		.unique()
 		.$defaultFn(() => nanoid(32)),
-	pollDuration: integer('poll_duration')
-		.notNull()
-		.default(60 * 60 * 24),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date()),
-	closedAt: integer('closed_at', { mode: 'timestamp' }),
+	closedAt: integer('closed_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date(Date.now() + 24 * 60 * 60 * 1000)),
 });
 
 export const slotsTable = sqliteTable('slots', {
