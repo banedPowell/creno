@@ -1,11 +1,4 @@
-import { eq } from 'drizzle-orm';
-import { nanoid } from 'nanoid';
-import {
-	pollsTable,
-	participantsTable,
-	votesTable,
-	slotsTable,
-} from '../../../db/schema';
+const VALID_STATUSES = ['yes', 'maybe'] as const;
 
 export default defineEventHandler(async (event) => {
 	const slug = getRouterParam(event, 'slug');
@@ -26,7 +19,6 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const VALID_STATUSES = ['yes', 'maybe'] as const;
 	const rawVotes: {
 		slotId: string;
 		status: (typeof VALID_STATUSES)[number];
@@ -52,20 +44,7 @@ export default defineEventHandler(async (event) => {
 		}
 	}
 
-	const db = useDrizzle();
-
-	const poll = await db
-		.select()
-		.from(pollsTable)
-		.where(eq(pollsTable.slug, slug))
-		.get();
-
-	if (!poll) {
-		throw createError({
-			statusCode: 404,
-			message: 'Sondage introuvable',
-		});
-	}
+	const poll = await requirePollBySlug(slug);
 
 	if (poll.closedAt && poll.closedAt <= new Date()) {
 		throw createError({
@@ -74,52 +53,8 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	if (rawVotes.length > 0) {
-		const validSlots = await db
-			.select({ id: slotsTable.id })
-			.from(slotsTable)
-			.where(eq(slotsTable.pollId, poll.id))
-			.all();
-
-		const validSlotIds = new Set(validSlots.map((s) => s.id));
-		const invalidSlotIds = rawVotes
-			.filter((v) => !validSlotIds.has(v.slotId))
-			.map((v) => v.slotId);
-
-		if (invalidSlotIds.length > 0) {
-			throw createError({
-				statusCode: 400,
-				message: `Créneaux invalides : ${invalidSlotIds.join(', ')}`,
-			});
-		}
-	}
-
-	const participantId = nanoid();
-
-	const [participant] = await db
-		.insert(participantsTable)
-		.values({
-			id: participantId,
-			name: body.name,
-			pollId: poll.id,
-		})
-		.returning({ id: participantsTable.id });
-
-	const insertedVotes =
-		rawVotes.length > 0
-			? await db
-					.insert(votesTable)
-					.values(
-						rawVotes.map((vote) => ({
-							id: nanoid(),
-							participantId,
-							slotId: vote.slotId,
-							status: vote.status as 'yes' | 'maybe',
-						})),
-					)
-					.returning()
-			: [];
+	const result = await createParticipantWithVotes(poll.id, body.name, rawVotes);
 
 	setResponseStatus(event, 201);
-	return { ...participant, votes: insertedVotes };
+	return result;
 });

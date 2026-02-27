@@ -1,6 +1,3 @@
-import { eq } from 'drizzle-orm';
-import { pollsTable, slotsTable } from '../../db/schema';
-
 export default defineEventHandler(async (event) => {
 	const slug = getRouterParam(event, 'slug');
 
@@ -11,22 +8,8 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const db = useDrizzle();
-
-	const poll = await db.select().from(pollsTable).where(eq(pollsTable.slug, slug)).get();
-
-	if (!poll) {
-		throw createError({
-			statusCode: 404,
-			message: 'Sondage introuvable',
-		});
-	}
-
-	const slots = await db
-		.select()
-		.from(slotsTable)
-		.where(eq(slotsTable.pollId, poll.id))
-		.all();
+	const poll = await requirePollBySlug(slug);
+	const slots = await getPollWithSlots(poll.id);
 
 	return { ...poll, slots };
 });

@@ -1,6 +1,3 @@
-import { nanoid } from 'nanoid';
-import { pollsTable, slotsTable } from '../db/schema';
-
 export default defineEventHandler(async (event) => {
 	const body = await readBody(event);
 
@@ -18,8 +15,6 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const db = useDrizzle();
-	const pollId = nanoid();
 	const now = new Date();
 	const closedAt = body.closedAt
 		? new Date(typeof body.closedAt === 'number' ? body.closedAt * 1000 : body.closedAt)
@@ -32,28 +27,13 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const [poll] = await db
-		.insert(pollsTable)
-		.values({
-			id: pollId,
-			title: body.title,
-			description: body.description || null,
-			createdAt: now,
-			closedAt,
-		})
-		.returning();
-
-	const slots = await db
-		.insert(slotsTable)
-		.values(
-			body.slots.map((slot: { startTime: string; duration: number }) => ({
-				pollId,
-				startTime: new Date(slot.startTime),
-				duration: slot.duration,
-			})),
-		)
-		.returning();
+	const poll = await createPoll({
+		title: body.title,
+		description: body.description,
+		closedAt,
+		slots: body.slots,
+	});
 
 	setResponseStatus(event, 201);
-	return { ...poll, slots };
+	return poll;
 });
