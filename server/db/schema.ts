@@ -1,4 +1,5 @@
-import { sqliteTable, integer, text } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, integer, text, check } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
 export const pollsTable = sqliteTable('polls', {
@@ -44,15 +45,24 @@ export const participantsTable = sqliteTable('participants', {
 		.$defaultFn(() => new Date()),
 });
 
-export const votesTable = sqliteTable('votes', {
-	id: text('id').primaryKey(),
-	participantId: text('participant_id')
-		.notNull()
-		.references(() => participantsTable.id, { onDelete: 'cascade' }),
-	slotId: text('slot_id')
-		.notNull()
-		.references(() => slotsTable.id, { onDelete: 'cascade' }),
-});
+export const votesTable = sqliteTable(
+	'votes',
+	{
+		id: text('id').primaryKey(),
+		participantId: text('participant_id')
+			.notNull()
+			.references(() => participantsTable.id, { onDelete: 'cascade' }),
+		slotId: text('slot_id')
+			.notNull()
+			.references(() => slotsTable.id, { onDelete: 'cascade' }),
+		status: text('status', { enum: ['yes', 'maybe'] })
+			.notNull()
+			.default('yes'),
+	},
+	(table) => [
+		check('status_check', sql`${table.status} IN ('yes', 'maybe')`),
+	],
+);
 
 export type Poll = typeof pollsTable.$inferSelect;
 export type NewPoll = typeof pollsTable.$inferInsert;

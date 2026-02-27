@@ -1,0 +1,20 @@
+meta {
+  name: Get poll
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{baseUrl}}/api/polls/{{adminSlug}}/
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  adminSlug: REPLACE_ME
+}
+
+settings {
+  encodeUrl: true
+  timeout: 0
+}
