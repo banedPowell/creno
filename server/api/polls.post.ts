@@ -17,7 +17,11 @@ export default defineEventHandler(async (event) => {
 
 	const now = new Date();
 	const closedAt = body.closedAt
-		? new Date(typeof body.closedAt === 'number' ? body.closedAt * 1000 : body.closedAt)
+		? new Date(
+				typeof body.closedAt === 'number'
+					? body.closedAt * 1000
+					: body.closedAt,
+			)
 		: new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
 	if (closedAt <= now) {
