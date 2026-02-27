@@ -1,0 +1,15 @@
+meta {
+  name: Get poll
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/polls/{{slug}}
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  slug: HPJoWec7lsab
+}
