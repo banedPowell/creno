@@ -7,7 +7,11 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:server": "vitest --project server",
+    "test:app": "vitest --project app"
   },
   "dependencies": {
     "@compodium/nuxt": "0.1.0-beta.12",
@@ -21,9 +25,13 @@
     "vue-router": "^4.6.4"
   },
   "devDependencies": {
+    "@nuxt/test-utils": "^4.0.0",
+    "@vue/test-utils": "^2.4.6",
     "drizzle-kit": "^0.31.9",
+    "happy-dom": "^20.7.0",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "tailwindcss": "^4.2.1"
+    "tailwindcss": "^4.2.1",
+    "vitest": "^4.0.18"
   }
 }
