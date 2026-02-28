@@ -2,10 +2,11 @@ import { drizzle } from 'drizzle-orm/libsql';
 import * as schema from '../db/schema';
 
 export function useDrizzle() {
+	const config = useRuntimeConfig();
 	return drizzle({
 		connection: {
-			url: useRuntimeConfig().turso.databaseUrl,
-			authToken: useRuntimeConfig().turso.authToken,
+			url: config.tursoUrl ?? '',
+			authToken: config.tursoToken ?? '',
 		},
 		schema,
 	});
