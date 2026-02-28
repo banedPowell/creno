@@ -16,7 +16,8 @@
 		"lint:fix": "eslint . --fix",
 		"format": "prettier --check .",
 		"format:fix": "prettier --write .",
-		"typecheck": "nuxt typecheck"
+		"typecheck": "nuxt typecheck",
+		"check": "pnpm i && pnpm format && pnpm lint && pnpm typecheck && pnpm test:run"
 	},
 	"dependencies": {
 		"@compodium/nuxt": "0.1.0-beta.12",
