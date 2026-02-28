@@ -4,7 +4,8 @@ const mockDrizzle = vi.fn(() => ({ select: vi.fn() }));
 vi.mock('drizzle-orm/libsql', () => ({ drizzle: mockDrizzle }));
 
 vi.stubGlobal('useRuntimeConfig', () => ({
-	turso: { databaseUrl: 'libsql://test', authToken: 'test-token' },
+	tursoUrl: 'libsql://test',
+	tursoToken: 'test-token',
 }));
 
 describe('useDrizzle', () => {
