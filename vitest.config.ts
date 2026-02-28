@@ -12,6 +12,7 @@ export default defineConfig({
 						'server/**/*.{test,spec}.ts',
 						'tests/server/**/*.{test,spec}.ts',
 					],
+					setupFiles: ['./tests/server/setup.ts'],
 					restoreMocks: true,
 				},
 			},
