@@ -1,10 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
-import {
-	slotsTable,
-	participantsTable,
-	votesTable,
-} from '../db/schema';
+import { slotsTable, participantsTable, votesTable } from '../db/schema';
 
 export async function validateSlotIds(pollId: string, slotIds: string[]) {
 	if (slotIds.length === 0) return;

@@ -53,7 +53,11 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const result = await createParticipantWithVotes(poll.id, body.name, rawVotes);
+	const result = await createParticipantWithVotes(
+		poll.id,
+		body.name,
+		rawVotes,
+	);
 
 	setResponseStatus(event, 201);
 	return result;
