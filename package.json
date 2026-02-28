@@ -15,7 +15,8 @@
 		"lint": "eslint .",
 		"lint:fix": "eslint . --fix",
 		"format": "prettier --check .",
-		"format:fix": "prettier --write ."
+		"format:fix": "prettier --write .",
+		"typecheck": "nuxt typecheck"
 	},
 	"dependencies": {
 		"@compodium/nuxt": "0.1.0-beta.12",
@@ -40,6 +41,7 @@
 		"prettier-plugin-tailwindcss": "^0.7.2",
 		"tailwindcss": "^4.2.1",
 		"typescript": "^5.9.3",
-		"vitest": "^4.0.18"
+		"vitest": "^4.0.18",
+		"vue-tsc": "^3.2.5"
 	}
 }
