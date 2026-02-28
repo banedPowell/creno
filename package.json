@@ -5,6 +5,12 @@
 	"scripts": {
 		"build": "nuxt build",
 		"dev": "nuxt dev",
+		"dev:fullstack": "pnpm i && pnpm approve-builds && pnpm drizzle:generate && pnpm drizzle:migrate && pnpm nuxt dev --dotenv .env",
+		"drizzle:studio": "drizzle-kit studio",
+		"drizzle:generate": "drizzle-kit generate",
+		"drizzle:migrate": "drizzle-kit migrate",
+		"drizzle:push": "drizzle-kit push",
+		"drizzle:pull": "drizzle-kit pull",
 		"generate": "nuxt generate",
 		"preview": "nuxt preview",
 		"postinstall": "nuxt prepare",

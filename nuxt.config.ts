@@ -14,4 +14,11 @@ export default defineNuxtConfig({
 		tursoUrl: process.env.TURSO_DATABASE_URL,
 		tursoToken: process.env.TURSO_AUTH_TOKEN,
 	},
+
+	components: [
+		{
+			path: '~/components',
+			pathPrefix: false,
+		},
+	],
 });
