@@ -1,0 +1,15 @@
+meta {
+  name: Get results
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/polls/{{slug}}/results
+  body: none
+  auth: inherit
+}
+
+vars:pre-request {
+  slug: REPLACE_ME
+}
