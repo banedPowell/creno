@@ -90,8 +90,8 @@
 
 									<template #content>
 										<UCalendar
-											class="p-4"
 											v-model="date"
+											class="p-4"
 											:min-value="minDate"
 											variant="subtle"
 										/>
