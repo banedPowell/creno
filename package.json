@@ -28,6 +28,7 @@
 	},
 	"dependencies": {
 		"@compodium/nuxt": "0.1.0-beta.12",
+		"@internationalized/date": "^3.11.0",
 		"@libsql/client": "^0.17.0",
 		"@nuxt/eslint": "1.15.2",
 		"@nuxt/ui": "4.5.0",

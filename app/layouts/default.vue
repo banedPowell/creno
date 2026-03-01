@@ -5,10 +5,10 @@
 		<template #right>
 			<UButton
 				icon="lucide-calendar"
-				label="Faire un creno"
+				label="Lancer un creno"
 				size="sm"
 				variant="soft"
-				to="/polls"
+				to="/poll/create"
 			/>
 
 			<UColorModeButton size="sm" color="primary" />
@@ -19,5 +19,5 @@
 		<slot />
 	</UMain>
 
-	<UFooter> {{ new Date().getFullYear() }} Creno </UFooter>
+	<UFooter> {{ new Date().getFullYear() }} © Creno </UFooter>
 </template>
