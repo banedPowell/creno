@@ -1,17 +1,16 @@
 <script setup lang="ts"></script>
 
 <template>
-	<UHeader title="Creno">
+	<UHeader title="Creno" :toggle="false">
 		<template #right>
+			<UColorModeButton size="sm" color="primary" />
+
 			<UButton
 				icon="lucide-calendar"
-				label="Lancer un creno"
+				label="Lancer un Creno"
 				size="sm"
-				variant="soft"
 				to="/poll/create"
 			/>
-
-			<UColorModeButton size="sm" color="primary" />
 		</template>
 	</UHeader>
 

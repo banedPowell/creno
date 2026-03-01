@@ -1,26 +1,47 @@
 <script setup lang="ts">
+	import { z } from 'zod';
 	import { CalendarDate } from '@internationalized/date';
 
-	const form = ref({
-		title: '',
-		description: '',
-		closedAt: '',
+	const schema = z.object({
+		title: z.string('Title is required'),
+		description: z.string('Description is required'),
+		closedAt: z.date('Closing date is required'),
+		slots: z.array(
+			z.object({
+				startTime: z.date('Start time is required'),
+				duration: z.number('Duration is required'),
+			}),
+		),
 	});
 
-	const handleSubmit = (e: Event) => {
-		e.preventDefault();
-	};
+	type Schema = z.output<typeof schema>;
 
-	const slots = ref([
-		{
-			startTime: '',
-			duration: 0,
-		},
-	]);
+	const state = reactive<Partial<Schema>>({
+		title: undefined,
+		description: undefined,
+		closedAt: undefined,
+		slots: [],
+	});
 
 	const today = new Date();
-	const minDate = new CalendarDate(today.getFullYear(), today.getMonth() + 1, today.getDate());
-	const date = shallowRef(minDate.add({ days: 3 }));
+	const minDate = new CalendarDate(
+		today.getFullYear(),
+		today.getMonth() + 1,
+		today.getDate(),
+	);
+	const date = shallowRef(minDate.add({ days: 7 }));
+
+	function calendarDateToDate(cal: CalendarDate): Date {
+		return new Date(cal.year, cal.month - 1, cal.day);
+	}
+
+	watch(
+		date,
+		(cal) => {
+			state.closedAt = cal ? calendarDateToDate(cal) : undefined;
+		},
+		{ immediate: true },
+	);
 
 	const addDay = () => {
 		date.value = date.value.add({ days: 1 });
@@ -37,15 +58,14 @@
 
 <template>
 	<UContainer class="mt-10 max-w-3xl">
-		<h1 class="text-2xl font-bold">Lancer un creno</h1>
+		<UForm :state="state" :schema="schema" class="space-y-6">
+			<div class="flex flex-col justify-between gap-4 md:flex-row">
+				<h1 class="text-3xl font-bold">Lancer un Creno</h1>
 
-		<UForm class="w-full space-y-4">
-			<UFormField label="Date de fermeture">
-				<div class="flex flex-row gap-2">
-					<UFieldGroup>
+				<UFormField label="Fermeture le">
+					<UFieldGroup size="sm">
 						<UButton
 							icon="lucide-minus"
-							label="1 jour"
 							variant="subtle"
 							color="neutral"
 							:disabled="isAtMinDate"
@@ -53,9 +73,9 @@
 						/>
 
 						<UInputDate
+							v-model="date"
 							variant="subtle"
 							:hour-cycle="24"
-							v-model="date"
 							:min-value="minDate"
 						>
 							<template #trailing>
@@ -63,7 +83,6 @@
 									<UButton
 										color="neutral"
 										variant="link"
-										size="sm"
 										icon="i-lucide-calendar"
 										aria-label="Select a date"
 										class="px-0"
@@ -71,7 +90,9 @@
 
 									<template #content>
 										<UCalendar
-											class="p-2"
+											class="p-4"
+											v-model="date"
+											:min-value="minDate"
 											variant="subtle"
 										/>
 									</template>
@@ -81,22 +102,34 @@
 
 						<UButton
 							icon="lucide-plus"
-							label="1 jour"
 							variant="subtle"
 							color="neutral"
 							@click="addDay"
 						/>
 					</UFieldGroup>
-				</div>
-			</UFormField>
+				</UFormField>
+			</div>
 
-			<UFormField label="Titre du creno">
-				<UInput v-model="form.title" class="w-full" />
-			</UFormField>
+			<div class="space-y-4">
+				<UFormField label="Titre du Creno" required size="lg">
+					<UInput v-model="state.title" class="w-full" />
+				</UFormField>
 
-			<UFormField label="Description du creno">
-				<UTextarea v-model="form.description" class="w-full" />
-			</UFormField>
+				<UFormField label="Description du Creno" size="lg">
+					<UTextarea v-model="state.description" class="w-full" />
+				</UFormField>
+			</div>
+
+			<div class="space-y-4">
+				<UFormField label="Définir des créneaux" required size="lg">
+				</UFormField>
+			</div>
+
+			<UButton
+				type="submit"
+				label="Lancer le Creno"
+				icon="lucide-rocket"
+			/>
 		</UForm>
 	</UContainer>
 </template>
