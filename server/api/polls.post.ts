@@ -22,7 +22,7 @@ export default defineEventHandler(async (event) => {
 					? body.closedAt * 1000
 					: body.closedAt,
 			)
-		: new Date(now.getTime() + 24 * 60 * 60 * 1000);
+		: new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
 	if (closedAt <= now) {
 		throw createError({

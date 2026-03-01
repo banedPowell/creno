@@ -19,7 +19,7 @@ export const pollsTable = sqliteTable('polls', {
 		.$defaultFn(() => new Date()),
 	closedAt: integer('closed_at', { mode: 'timestamp' })
 		.notNull()
-		.$defaultFn(() => new Date(Date.now() + 24 * 60 * 60 * 1000)),
+		.$defaultFn(() => new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)),
 });
 
 export const slotsTable = sqliteTable('slots', {
