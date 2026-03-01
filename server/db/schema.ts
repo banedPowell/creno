@@ -71,3 +71,8 @@ export type Participant = typeof participantsTable.$inferSelect;
 export type NewParticipant = typeof participantsTable.$inferInsert;
 export type Vote = typeof votesTable.$inferSelect;
 export type NewVote = typeof votesTable.$inferInsert;
+
+export type CreateSlotInput = {
+	startTime: string;
+	duration: number;
+};

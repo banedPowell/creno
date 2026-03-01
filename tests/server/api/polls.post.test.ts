@@ -4,13 +4,13 @@ import { readBody, createPoll, setResponseStatus } from '../mocks';
 
 const mockEvent: MockEvent = {};
 
-describe('POST /api/polls', () => {
+describe('POST /api/polls/create', () => {
 	it('retourne 400 si le titre est manquant', async () => {
 		vi.mocked(readBody).mockResolvedValue({
 			slots: [{ startTime: '2030-01-01T09:00:00Z', duration: 3600 }],
 		});
 
-		const handler = (await import('../../../server/api/polls.post'))
+		const handler = (await import('../../../server/api/polls/create.post'))
 			.default;
 
 		await expect(handler(mockEvent)).rejects.toThrow('Le titre est requis');
@@ -22,7 +22,7 @@ describe('POST /api/polls', () => {
 			slots: [{ startTime: '2030-01-01T09:00:00Z', duration: 3600 }],
 		});
 
-		const handler = (await import('../../../server/api/polls.post'))
+		const handler = (await import('../../../server/api/polls/create.post'))
 			.default;
 
 		await expect(handler(mockEvent)).rejects.toThrow('Le titre est requis');
@@ -31,7 +31,7 @@ describe('POST /api/polls', () => {
 	it('retourne 400 si slots est vide', async () => {
 		vi.mocked(readBody).mockResolvedValue({ title: 'Test', slots: [] });
 
-		const handler = (await import('../../../server/api/polls.post'))
+		const handler = (await import('../../../server/api/polls/create.post'))
 			.default;
 
 		await expect(handler(mockEvent)).rejects.toThrow(
@@ -45,7 +45,7 @@ describe('POST /api/polls', () => {
 			slots: 'invalid',
 		});
 
-		const handler = (await import('../../../server/api/polls.post'))
+		const handler = (await import('../../../server/api/polls/create.post'))
 			.default;
 
 		await expect(handler(mockEvent)).rejects.toThrow(
@@ -60,7 +60,7 @@ describe('POST /api/polls', () => {
 			closedAt: '2020-01-01T00:00:00Z',
 		});
 
-		const handler = (await import('../../../server/api/polls.post'))
+		const handler = (await import('../../../server/api/polls/create.post'))
 			.default;
 
 		await expect(handler(mockEvent)).rejects.toThrow(
@@ -76,7 +76,7 @@ describe('POST /api/polls', () => {
 		});
 		vi.mocked(createPoll).mockResolvedValue(mockPoll);
 
-		const handler = (await import('../../../server/api/polls.post'))
+		const handler = (await import('../../../server/api/polls/create.post'))
 			.default;
 		const result = await handler(mockEvent);
 
@@ -101,7 +101,7 @@ describe('POST /api/polls', () => {
 		});
 		vi.mocked(createPoll).mockResolvedValue(mockPoll);
 
-		const handler = (await import('../../../server/api/polls.post'))
+		const handler = (await import('../../../server/api/polls/create.post'))
 			.default;
 		const result = await handler(mockEvent);
 
