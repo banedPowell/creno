@@ -5,6 +5,7 @@ import {
 	slotsTable,
 	participantsTable,
 	votesTable,
+	type CreateSlotInput,
 } from '../db/schema';
 
 export async function requirePollBySlug(slug: string) {
@@ -29,7 +30,7 @@ export async function createPoll(data: {
 	title: string;
 	description?: string | null;
 	closedAt: Date;
-	slots: { startTime: string; duration: number }[];
+	slots: CreateSlotInput[];
 }) {
 	const db = useDrizzle();
 	const pollId = nanoid();
