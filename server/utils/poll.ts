@@ -49,11 +49,17 @@ export async function createPoll(data: {
 	const slots = await db
 		.insert(slotsTable)
 		.values(
-			data.slots.map((slot) => ({
-				pollId,
-				startTime: new Date(slot.startTime),
-				duration: slot.duration,
-			})),
+			data.slots.map((slot) => {
+				const start = new Date(slot.start);
+				const end = new Date(slot.end);
+				return {
+					pollId,
+					startTime: start,
+					duration: Math.round(
+						(end.getTime() - start.getTime()) / 1000,
+					),
+				};
+			}),
 		)
 		.returning();
 

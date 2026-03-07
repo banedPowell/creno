@@ -15,6 +15,29 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
+	for (const slot of body.slots) {
+		if (typeof slot?.start !== 'string' || typeof slot?.end !== 'string') {
+			throw createError({
+				statusCode: 400,
+				message: 'Chaque créneau doit avoir start et end (ISO 8601)',
+			});
+		}
+		const start = new Date(slot.start);
+		const end = new Date(slot.end);
+		if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+			throw createError({
+				statusCode: 400,
+				message: 'start et end doivent être des dates valides',
+			});
+		}
+		if (end.getTime() <= start.getTime()) {
+			throw createError({
+				statusCode: 400,
+				message: 'end doit être après start',
+			});
+		}
+	}
+
 	const now = new Date();
 	const closedAt = body.closedAt
 		? new Date(

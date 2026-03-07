@@ -7,7 +7,12 @@ const mockEvent: MockEvent = {};
 describe('POST /api/polls/create', () => {
 	it('retourne 400 si le titre est manquant', async () => {
 		vi.mocked(readBody).mockResolvedValue({
-			slots: [{ startTime: '2030-01-01T09:00:00Z', duration: 3600 }],
+			slots: [
+				{
+					start: '2030-01-01T09:00:00.000Z',
+					end: '2030-01-01T10:00:00.000Z',
+				},
+			],
 		});
 
 		const handler = (await import('../../../server/api/polls/create.post'))
@@ -19,7 +24,12 @@ describe('POST /api/polls/create', () => {
 	it("retourne 400 si le titre n'est pas une string", async () => {
 		vi.mocked(readBody).mockResolvedValue({
 			title: 123,
-			slots: [{ startTime: '2030-01-01T09:00:00Z', duration: 3600 }],
+			slots: [
+				{
+					start: '2030-01-01T09:00:00.000Z',
+					end: '2030-01-01T10:00:00.000Z',
+				},
+			],
 		});
 
 		const handler = (await import('../../../server/api/polls/create.post'))
@@ -56,7 +66,12 @@ describe('POST /api/polls/create', () => {
 	it('retourne 400 si closedAt est dans le passé', async () => {
 		vi.mocked(readBody).mockResolvedValue({
 			title: 'Test',
-			slots: [{ startTime: '2030-01-01T09:00:00Z', duration: 3600 }],
+			slots: [
+				{
+					start: '2030-01-01T09:00:00.000Z',
+					end: '2030-01-01T10:00:00.000Z',
+				},
+			],
 			closedAt: '2020-01-01T00:00:00Z',
 		});
 
@@ -70,9 +85,15 @@ describe('POST /api/polls/create', () => {
 
 	it('crée un poll avec closedAt par défaut si non fourni', async () => {
 		const mockPoll = { id: 'poll-1', title: 'Test', slug: 'abc123' };
+		const slots = [
+			{
+				start: '2030-01-01T09:00:00.000Z',
+				end: '2030-01-01T10:00:00.000Z',
+			},
+		];
 		vi.mocked(readBody).mockResolvedValue({
 			title: 'Test',
-			slots: [{ startTime: '2030-01-01T09:00:00Z', duration: 3600 }],
+			slots,
 		});
 		vi.mocked(createPoll).mockResolvedValue(mockPoll);
 
@@ -84,7 +105,7 @@ describe('POST /api/polls/create', () => {
 			expect.objectContaining({
 				title: 'Test',
 				closedAt: expect.any(Date),
-				slots: [{ startTime: '2030-01-01T09:00:00Z', duration: 3600 }],
+				slots,
 			}),
 		);
 		expect(setResponseStatus).toHaveBeenCalledWith(mockEvent, 201);
@@ -93,10 +114,16 @@ describe('POST /api/polls/create', () => {
 
 	it('crée un poll avec closedAt explicite', async () => {
 		const mockPoll = { id: 'poll-1', title: 'Test', slug: 'abc123' };
+		const slots = [
+			{
+				start: '2030-01-01T09:00:00.000Z',
+				end: '2030-01-01T10:00:00.000Z',
+			},
+		];
 		vi.mocked(readBody).mockResolvedValue({
 			title: 'Test',
 			description: 'Une description',
-			slots: [{ startTime: '2030-01-01T09:00:00Z', duration: 3600 }],
+			slots,
 			closedAt: '2030-06-01T00:00:00Z',
 		});
 		vi.mocked(createPoll).mockResolvedValue(mockPoll);
@@ -109,7 +136,7 @@ describe('POST /api/polls/create', () => {
 			title: 'Test',
 			description: 'Une description',
 			closedAt: new Date('2030-06-01T00:00:00Z'),
-			slots: [{ startTime: '2030-01-01T09:00:00Z', duration: 3600 }],
+			slots,
 		});
 		expect(setResponseStatus).toHaveBeenCalledWith(mockEvent, 201);
 		expect(result).toEqual(mockPoll);
