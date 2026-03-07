@@ -1,14 +1,16 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+	const { sizeMd } = useResponsiveButtonSize();
+</script>
 
 <template>
 	<UHeader title="Creno" :toggle="false">
 		<template #right>
-			<UColorModeButton size="sm" color="primary" />
+			<UColorModeButton :size="sizeMd" color="primary" />
 
 			<UButton
 				icon="lucide-calendar"
 				label="Lancer un Creno"
-				size="sm"
+				:size="sizeMd"
 				to="/poll/create"
 			/>
 		</template>
