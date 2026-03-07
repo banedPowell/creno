@@ -8,6 +8,7 @@ export default defineNuxtConfig({
 		'@compodium/nuxt',
 		'@nuxt/test-utils/module',
 		'@nuxt/eslint',
+		'@vueuse/nuxt',
 	],
 
 	runtimeConfig: {
