@@ -1,7 +1,10 @@
 <script setup lang="ts">
+	import { useWebHaptics } from 'web-haptics/vue';
 	import { z } from 'zod';
 	import { CalendarDate } from '@internationalized/date';
 	import type { CalendarTimeSlot } from '~/types/calendar';
+
+	const haptic = useWebHaptics();
 
 	const schema = z.object({
 		title: z
@@ -123,7 +126,12 @@
 							variant="subtle"
 							color="neutral"
 							:disabled="isAtMinDate"
-							@click="removeDay"
+							@click="
+								() => {
+									haptic.trigger('light');
+									removeDay();
+								}
+							"
 						/>
 
 						<UInputDate
@@ -140,6 +148,7 @@
 										icon="i-lucide-calendar"
 										aria-label="Select a date"
 										class="px-0"
+										@click="haptic.trigger('light')"
 									/>
 
 									<template #content>
@@ -149,6 +158,9 @@
 											:min-value="minDate"
 											variant="subtle"
 											:size="sizeXl"
+											@update:model-value="
+												haptic.trigger('light')
+											"
 										/>
 									</template>
 								</UPopover>
@@ -159,7 +171,12 @@
 							icon="lucide-plus"
 							variant="subtle"
 							color="neutral"
-							@click="addDay"
+							@click="
+								() => {
+									haptic.trigger('light');
+									addDay();
+								}
+							"
 						/>
 					</UFieldGroup>
 				</UFormField>
@@ -213,6 +230,7 @@
 				:size="sizeXl"
 				color="primary"
 				class="w-full justify-center md:w-fit"
+				@click="haptic.trigger('medium')"
 			/>
 		</UForm>
 	</UContainer>
