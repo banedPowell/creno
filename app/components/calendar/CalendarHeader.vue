@@ -1,6 +1,9 @@
 <script setup lang="ts">
+	import { useWebHaptics } from 'web-haptics/vue';
+
 	const { navigation } = useCalendarContext();
 	const { sizeMd } = useResponsiveButtonSize();
+	const haptic = useWebHaptics();
 </script>
 
 <template>
@@ -19,7 +22,12 @@
 						:disabled="!navigation.canGoPrevBigPeriod.value"
 						:size="sizeMd"
 						class="light:hover:bg-neutral-200"
-						@click="navigation.prevBigPeriod"
+						@click="
+							() => {
+								haptic.trigger('light');
+								navigation.prevBigPeriod();
+							}
+						"
 					/>
 					<UButton
 						icon="i-lucide-chevron-left"
@@ -28,7 +36,12 @@
 						:disabled="!navigation.canGoPrevPeriod.value"
 						:size="sizeMd"
 						class="light:hover:bg-neutral-200"
-						@click="navigation.prevPeriod"
+						@click="
+							() => {
+								haptic.trigger('light');
+								navigation.prevPeriod();
+							}
+						"
 					/>
 				</div>
 
@@ -36,7 +49,12 @@
 					variant="soft"
 					:size="sizeMd"
 					label="Aujourd'hui"
-					@click="navigation.goToday"
+					@click="
+						() => {
+							haptic.trigger('medium');
+							navigation.goToday();
+						}
+					"
 				/>
 
 				<div class="flex items-center gap-0.5">
@@ -46,7 +64,12 @@
 						color="neutral"
 						:size="sizeMd"
 						class="light:hover:bg-neutral-200"
-						@click="navigation.nextPeriod"
+						@click="
+							() => {
+								haptic.trigger('light');
+								navigation.nextPeriod();
+							}
+						"
 					/>
 					<UButton
 						icon="i-lucide-chevrons-right"
@@ -54,7 +77,12 @@
 						color="neutral"
 						:size="sizeMd"
 						class="light:hover:bg-neutral-200"
-						@click="navigation.nextBigPeriod"
+						@click="
+							() => {
+								haptic.trigger('light');
+								navigation.nextBigPeriod();
+							}
+						"
 					/>
 				</div>
 			</div>
@@ -83,7 +111,12 @@
 								? 'hover:brightness-120'
 								: 'light:hover:bg-neutral-200'
 						"
-						@click="navigation.view.value = 'day'"
+						@click="
+							() => {
+								haptic.trigger('light');
+								navigation.view.value = 'day';
+							}
+						"
 					/>
 				</UTooltip>
 
@@ -100,7 +133,12 @@
 								? 'hover:brightness-120'
 								: 'light:hover:bg-neutral-200'
 						"
-						@click="navigation.view.value = 'week'"
+						@click="
+							() => {
+								haptic.trigger('light');
+								navigation.view.value = 'week';
+							}
+						"
 					/>
 				</UTooltip>
 			</div>
