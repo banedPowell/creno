@@ -12,7 +12,7 @@
 				variant="link"
 				color="neutral"
 				to="/"
-				class="font-bold text-xl text-highlighted p-0 min-w-0 h-auto"
+				class="text-highlighted h-auto min-w-0 p-0 text-xl font-bold"
 				@click="haptic.trigger('light')"
 			>
 				Creno
