@@ -3,11 +3,9 @@
 
 	const props = withDefaults(
 		defineProps<{
-			modelValue: CalendarTimeSlot[];
 			hourStart?: number;
 			hourEnd?: number;
-			cellDuration?: number;
-			dragStep?: number;
+			snapMinutes?: number;
 			clickSlotDuration?: number;
 			defaultView?: CalendarView;
 			maxHeight?: number;
@@ -15,39 +13,42 @@
 		{
 			hourStart: 7,
 			hourEnd: 22,
-			cellDuration: 30,
-			dragStep: undefined,
+			snapMinutes: 15,
 			clickSlotDuration: 120,
 			defaultView: 'week',
 			maxHeight: 80,
 		},
 	);
 
-	const emit = defineEmits<{
-		'update:modelValue': [value: CalendarTimeSlot[]];
-	}>();
+	const slots = defineModel<CalendarTimeSlot[]>({ required: true });
 
-	const slots = computed({
-		get: () => props.modelValue,
-		set: (value) => emit('update:modelValue', value),
-	});
-
-	useProvideCalendarContext(
+	const { calendar } = useProvideCalendarContext(
 		slots,
 		{
 			hourStart: props.hourStart,
 			hourEnd: props.hourEnd,
-			cellDuration: props.cellDuration,
-			dragStep: props.dragStep ?? props.cellDuration,
+			snapMinutes: props.snapMinutes,
 			clickSlotDuration: props.clickSlotDuration,
 		},
 		props.defaultView,
 	);
+
+	defineShortcuts({
+		t: calendar.goToday,
+		d: () => (calendar.view.value = 'day'),
+		w: () => (calendar.view.value = 'week'),
+		m: () => (calendar.view.value = 'month'),
+		arrowleft: calendar.prevPeriod,
+		arrowright: calendar.nextPeriod,
+		shift_arrowleft: calendar.prevBigPeriod,
+		shift_arrowright: calendar.nextBigPeriod,
+	});
 </script>
 
 <template>
 	<div class="select-none">
 		<CalendarHeader />
-		<CalendarGrid :max-height="props.maxHeight" />
+		<CalendarMonthView v-if="calendar.view.value === 'month'" />
+		<CalendarWeekView v-else :max-height="maxHeight" />
 	</div>
 </template>

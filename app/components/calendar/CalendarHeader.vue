@@ -1,7 +1,7 @@
 <script setup lang="ts">
 	import { useWebHaptics } from 'web-haptics/vue';
 
-	const { navigation } = useCalendarContext();
+	const { calendar } = useCalendarContext();
 	const { sizeMd } = useResponsiveButtonSize();
 	const haptic = useWebHaptics();
 </script>
@@ -11,132 +11,166 @@
 		<div
 			class="flex flex-col-reverse flex-wrap items-center gap-2 md:flex-row"
 		>
-			<div
-				class="dark:bg-old-neutral-900 flex items-center gap-2 rounded-xl bg-neutral-100 p-1.5"
-			>
+			<div class="bg-elevated flex items-center gap-2 rounded-xl p-1.5">
 				<div class="flex items-center gap-0.5">
-					<UButton
-						icon="i-lucide-chevrons-left"
-						variant="ghost"
-						color="neutral"
-						:disabled="!navigation.canGoPrevBigPeriod.value"
-						:size="sizeMd"
-						class="light:hover:bg-neutral-200"
-						@click="
-							() => {
-								haptic.trigger('light');
-								navigation.prevBigPeriod();
-							}
-						"
-					/>
-					<UButton
-						icon="i-lucide-chevron-left"
-						variant="ghost"
-						color="neutral"
-						:disabled="!navigation.canGoPrevPeriod.value"
-						:size="sizeMd"
-						class="light:hover:bg-neutral-200"
-						@click="
-							() => {
-								haptic.trigger('light');
-								navigation.prevPeriod();
-							}
-						"
-					/>
+					<UTooltip
+						text="Période précédente longue"
+						:kbds="['shift', 'arrowleft']"
+					>
+						<UButton
+							icon="i-lucide-chevrons-left"
+							variant="ghost"
+							color="neutral"
+							:disabled="!calendar.canGoPrevBigPeriod.value"
+							:size="sizeMd"
+							class="hover:bg-accented"
+							@click="
+								() => {
+									haptic.trigger('light');
+									calendar.prevBigPeriod();
+								}
+							"
+						/>
+					</UTooltip>
+					<UTooltip text="Période précédente" :kbds="['arrowleft']">
+						<UButton
+							icon="i-lucide-chevron-left"
+							variant="ghost"
+							color="neutral"
+							:disabled="!calendar.canGoPrevPeriod.value"
+							:size="sizeMd"
+							class="hover:bg-accented"
+							@click="
+								() => {
+									haptic.trigger('light');
+									calendar.prevPeriod();
+								}
+							"
+						/>
+					</UTooltip>
 				</div>
 
-				<UButton
-					variant="soft"
-					:size="sizeMd"
-					label="Aujourd'hui"
-					@click="
-						() => {
-							haptic.trigger('medium');
-							navigation.goToday();
-						}
-					"
-				/>
-
-				<div class="flex items-center gap-0.5">
+				<UTooltip text="Revenir à aujourd'hui" :kbds="['T']">
 					<UButton
-						icon="i-lucide-chevron-right"
-						variant="ghost"
-						color="neutral"
+						variant="soft"
 						:size="sizeMd"
-						class="light:hover:bg-neutral-200"
+						label="Aujourd'hui"
 						@click="
 							() => {
-								haptic.trigger('light');
-								navigation.nextPeriod();
-							}
-						"
-					/>
-					<UButton
-						icon="i-lucide-chevrons-right"
-						variant="ghost"
-						color="neutral"
-						:size="sizeMd"
-						class="light:hover:bg-neutral-200"
-						@click="
-							() => {
-								haptic.trigger('light');
-								navigation.nextBigPeriod();
-							}
-						"
-					/>
-				</div>
-			</div>
-
-			<span
-				class="text-xs font-medium text-neutral-600 select-none dark:text-neutral-400"
-			>
-				{{ navigation.dateRangeLabel.value }}
-			</span>
-		</div>
-
-		<div class="flex items-center gap-4">
-			<div
-				class="dark:bg-old-neutral-900 flex items-center gap-1 rounded-xl bg-neutral-100 p-1.5"
-			>
-				<UTooltip text="Vue jour par jour">
-					<UButton
-						:variant="
-							navigation.view.value === 'day' ? 'solid' : 'ghost'
-						"
-						color="neutral"
-						icon="lucide-calendar-1"
-						:size="sizeMd"
-						:class="
-							navigation.view.value === 'day'
-								? 'hover:brightness-120'
-								: 'light:hover:bg-neutral-200'
-						"
-						@click="
-							() => {
-								haptic.trigger('light');
-								navigation.view.value = 'day';
+								haptic.trigger('medium');
+								calendar.goToday();
 							}
 						"
 					/>
 				</UTooltip>
 
-				<UTooltip text="Vue semaine par semaine">
+				<div class="flex items-center gap-0.5">
+					<UTooltip text="Période suivante" :kbds="['arrowright']">
+						<UButton
+							icon="i-lucide-chevron-right"
+							variant="ghost"
+							color="neutral"
+							:size="sizeMd"
+							class="hover:bg-accented"
+							@click="
+								() => {
+									haptic.trigger('light');
+									calendar.nextPeriod();
+								}
+							"
+						/>
+					</UTooltip>
+					<UTooltip
+						text="Période suivante longue"
+						:kbds="['shift', 'arrowright']"
+					>
+						<UButton
+							icon="i-lucide-chevrons-right"
+							variant="ghost"
+							color="neutral"
+							:size="sizeMd"
+							class="hover:bg-accented"
+							@click="
+								() => {
+									haptic.trigger('light');
+									calendar.nextBigPeriod();
+								}
+							"
+						/>
+					</UTooltip>
+				</div>
+			</div>
+
+			<span
+				class="text-muted text-xs font-medium select-none first-letter:uppercase"
+			>
+				{{ calendar.periodLabel.value }}
+			</span>
+		</div>
+
+		<div class="flex items-center gap-4">
+			<div class="bg-elevated flex items-center gap-1 rounded-xl p-1.5">
+				<UTooltip text="Vue jour par jour" :kbds="['D']">
 					<UButton
 						:variant="
-							navigation.view.value === 'week' ? 'solid' : 'ghost'
+							calendar.view.value === 'day' ? 'solid' : 'ghost'
+						"
+						color="neutral"
+						icon="lucide-calendar-1"
+						:size="sizeMd"
+						:class="
+							calendar.view.value === 'day'
+								? 'hover:brightness-120'
+								: 'hover:bg-accented'
+						"
+						@click="
+							() => {
+								haptic.trigger('light');
+								calendar.view.value = 'day';
+							}
+						"
+					/>
+				</UTooltip>
+
+				<UTooltip text="Vue semaine par semaine" :kbds="['W']">
+					<UButton
+						:variant="
+							calendar.view.value === 'week' ? 'solid' : 'ghost'
 						"
 						color="neutral"
 						icon="lucide-columns-2"
 						:size="sizeMd"
 						:class="
-							navigation.view.value === 'week'
+							calendar.view.value === 'week'
 								? 'hover:brightness-120'
-								: 'light:hover:bg-neutral-200'
+								: 'hover:bg-accented'
 						"
 						@click="
 							() => {
 								haptic.trigger('light');
-								navigation.view.value = 'week';
+								calendar.view.value = 'week';
+							}
+						"
+					/>
+				</UTooltip>
+
+				<UTooltip text="Vue mois par mois" :kbds="['M']">
+					<UButton
+						:variant="
+							calendar.view.value === 'month' ? 'solid' : 'ghost'
+						"
+						color="neutral"
+						icon="lucide-calendar-days"
+						:size="sizeMd"
+						:class="
+							calendar.view.value === 'month'
+								? 'hover:brightness-120'
+								: 'hover:bg-accented'
+						"
+						@click="
+							() => {
+								haptic.trigger('light');
+								calendar.view.value = 'month';
 							}
 						"
 					/>

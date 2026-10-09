@@ -1,44 +1,15 @@
 <script setup lang="ts">
 	import { useWebHaptics } from 'web-haptics/vue';
-	import { z } from 'zod';
 	import { CalendarDate } from '@internationalized/date';
+	import type { DateDuration } from '@internationalized/date';
+	import type { FormError } from '@nuxt/ui';
 	import type { CalendarTimeSlot } from '~/types/calendar';
 
 	const haptic = useWebHaptics();
 
-	const schema = z.object({
-		title: z
-			.string()
-			.min(
-				2,
-				'Le titre est requis et doit contenir au moins 2 caractères',
-			),
-		description: z.string().optional(),
-		closedAt: z.date(),
-		slots: z
-			.array(z.object({ start: z.string(), end: z.string() }))
-			.min(1, 'Au moins un créneau est requis'),
-	});
-
-	type Schema = z.output<typeof schema>;
-
-	const state = reactive<Partial<Schema>>({
-		title: undefined,
-		description: undefined,
-		closedAt: undefined,
-		slots: [],
-	});
-
-	const isValid = computed(() => schema.safeParse(state).success);
+	const state = reactive({ title: '', description: '' });
 
 	const calendarSlots = ref<CalendarTimeSlot[]>([]);
-	watch(
-		calendarSlots,
-		(slots) => {
-			state.slots = slots.map(calendarSlotToApiSlot);
-		},
-		{ immediate: true, deep: true },
-	);
 
 	const today = new Date();
 	const minDate = new CalendarDate(
@@ -52,13 +23,29 @@
 		return new Date(cal.year, cal.month - 1, cal.day);
 	}
 
-	watch(
-		date,
-		(cal) => {
-			state.closedAt = cal ? calendarDateToDate(cal) : undefined;
-		},
-		{ immediate: true },
+	// Everything sent goes through this one check, the form only displays it
+	const now = useNow({ interval: 60_000 });
+	const result = computed(() =>
+		buildPollPayload(
+			{
+				title: state.title,
+				description: state.description,
+				closingDate: date.value,
+				slots: calendarSlots.value,
+			},
+			now.value,
+		),
 	);
+
+	const isValid = computed(() => result.value.success);
+
+	const validate = (): FormError[] =>
+		result.value.success
+			? []
+			: result.value.issues.map(({ path, message }) => ({
+					name: path,
+					message,
+				}));
 
 	const addDay = () => {
 		date.value = date.value.add({ days: 1 });
@@ -71,6 +58,33 @@
 	};
 
 	const isAtMinDate = computed(() => date.value.compare(minDate) <= 0);
+
+	const closingPresets: { label: string; duration: DateDuration }[] = [
+		{ label: '+1 sem.', duration: { weeks: 1 } },
+		{ label: '+2 sem.', duration: { weeks: 2 } },
+		{ label: '+1 mois', duration: { months: 1 } },
+	];
+
+	const isPresetActive = (duration: DateDuration) =>
+		date.value.compare(minDate.add(duration)) === 0;
+
+	const closingHint = computed(() => {
+		const days = date.value.compare(minDate);
+		const relative =
+			days === 0
+				? "aujourd'hui"
+				: days === 1
+					? 'demain'
+					: `dans ${days} jours`;
+		return `Les votes ferment le ${formatFullDate(calendarDateToDate(date.value))}, ${relative}.`;
+	});
+
+	// What the action bar says: the first thing to fix, or what will be sent
+	const summary = computed(() => {
+		if (!result.value.success) return result.value.issues[0]!.message;
+		const count = result.value.data.slots.length;
+		return `${count} créneau${count > 1 ? 'x' : ''} · clôture le ${formatDayMonth(calendarDateToDate(date.value))}`;
+	});
 
 	const { sizeMd, sizeXl } = useResponsiveButtonSize();
 
@@ -85,15 +99,8 @@
 	});
 
 	async function onSubmit() {
-		const parsed = schema.safeParse(state);
-		if (!parsed.success) return;
-		const { title, description, closedAt, slots } = parsed.data;
-		submitBody.value = {
-			title,
-			description: description ?? undefined,
-			closedAt: closedAt.toISOString(),
-			slots,
-		};
+		if (!result.value.success) return;
+		submitBody.value = result.value.data;
 		await execute();
 		if (error.value) {
 			const msg = (error.value.data as { message?: string })?.message;
@@ -109,129 +116,181 @@
 </script>
 
 <template>
-	<UContainer class="mt-10 max-w-5xl">
+	<UContainer class="mt-8 max-w-5xl pb-28 md:mt-12">
+		<h1 class="sr-only">Lancer un Creno</h1>
+
 		<UForm
 			:state="state"
-			:schema="schema"
+			:validate="validate"
 			class="space-y-6"
 			@submit="onSubmit"
 		>
-			<div class="flex flex-col justify-between gap-4 md:flex-row">
-				<h1 class="text-3xl font-bold">Lancer un Creno</h1>
-
-				<UFormField label="Fermeture le" name="closedAt">
-					<UFieldGroup :size="sizeMd">
-						<UButton
-							icon="lucide-minus"
-							variant="subtle"
-							color="neutral"
-							:disabled="isAtMinDate"
-							@click="
-								() => {
-									haptic.trigger('light');
-									removeDay();
-								}
-							"
-						/>
-
-						<UInputDate
-							v-model="date"
-							variant="subtle"
-							:hour-cycle="24"
-							:min-value="minDate"
-						>
-							<template #trailing>
-								<UPopover>
-									<UButton
-										color="neutral"
-										variant="link"
-										icon="i-lucide-calendar"
-										aria-label="Select a date"
-										class="px-0"
-										@click="haptic.trigger('light')"
-									/>
-
-									<template #content>
-										<UCalendar
-											v-model="date"
-											class="p-4"
-											:min-value="minDate"
-											variant="subtle"
-											:size="sizeXl"
-											@update:model-value="
-												haptic.trigger('light')
-											"
-										/>
-									</template>
-								</UPopover>
-							</template>
-						</UInputDate>
-
-						<UButton
-							icon="lucide-plus"
-							variant="subtle"
-							color="neutral"
-							@click="
-								() => {
-									haptic.trigger('light');
-									addDay();
-								}
-							"
-						/>
-					</UFieldGroup>
-				</UFormField>
-			</div>
-
-			<div class="space-y-4">
-				<UFormField
-					label="Titre du Creno"
-					required
-					size="lg"
-					name="title"
-				>
+			<div>
+				<UFormField name="title">
 					<UInput
 						v-model="state.title"
-						class="w-full"
+						variant="none"
+						size="xl"
+						aria-label="Titre du Creno"
 						placeholder="Réunion d'équipe"
+						class="w-full"
+						:ui="{
+							base: 'text-highlighted placeholder:text-dimmed px-0 text-3xl font-bold md:text-4xl',
+						}"
 					/>
 				</UFormField>
 
-				<UFormField
-					label="Description du Creno"
-					size="lg"
-					name="description"
-				>
+				<UFormField name="description">
 					<UTextarea
 						v-model="state.description"
+						variant="none"
+						autoresize
+						:rows="1"
+						aria-label="Description du Creno"
+						placeholder="Ajoutez une description (facultatif)"
 						class="w-full"
-						placeholder="Trouvons un créneau pour notre prochaine réunion"
+						:ui="{
+							base: 'text-muted placeholder:text-dimmed resize-none px-0 text-base',
+						}"
 					/>
 				</UFormField>
 			</div>
 
-			<div class="space-y-4">
-				<UFormField
-					label="Définir des créneaux"
-					required
-					size="lg"
-					name="slots"
-				>
-					<PollCalendar v-model="calendarSlots" />
-				</UFormField>
-			</div>
+			<UFormField name="closedAt">
+				<div class="flex flex-wrap items-center gap-3">
+					<span class="text-muted text-sm">Clôture</span>
 
-			<UButton
-				type="submit"
-				label="Lancer le Creno"
-				icon="lucide-rocket"
-				:loading="pending"
-				:disabled="pending || !isValid"
-				variant="solid"
-				:size="sizeXl"
-				color="primary"
-				class="w-full justify-center md:w-fit"
-				@click="haptic.trigger('medium')"
-			/>
+					<div
+						class="bg-elevated flex w-fit flex-wrap items-center gap-2 rounded-xl p-1.5"
+					>
+						<div class="flex items-center gap-0.5">
+							<UButton
+								icon="i-lucide-minus"
+								variant="ghost"
+								color="neutral"
+								:size="sizeMd"
+								:disabled="isAtMinDate"
+								class="hover:bg-accented"
+								aria-label="Un jour plus tôt"
+								@click="
+									() => {
+										haptic.trigger('light');
+										removeDay();
+									}
+								"
+							/>
+
+							<UTooltip :text="closingHint">
+								<UInputDate
+									v-model="date"
+									variant="none"
+									:size="sizeMd"
+									:hour-cycle="24"
+									:min-value="minDate"
+									class="bg-elevated rounded-lg"
+								>
+									<template #trailing>
+										<UPopover>
+											<UButton
+												color="neutral"
+												variant="link"
+												icon="i-lucide-calendar"
+												aria-label="Choisir une date"
+												class="px-0"
+												@click="haptic.trigger('light')"
+											/>
+
+											<template #content>
+												<UCalendar
+													v-model="date"
+													class="p-4"
+													:min-value="minDate"
+													variant="subtle"
+													:size="sizeXl"
+													@update:model-value="
+														haptic.trigger('light')
+													"
+												/>
+											</template>
+										</UPopover>
+									</template>
+								</UInputDate>
+							</UTooltip>
+
+							<UButton
+								icon="i-lucide-plus"
+								variant="ghost"
+								color="neutral"
+								:size="sizeMd"
+								class="hover:bg-accented"
+								aria-label="Un jour plus tard"
+								@click="
+									() => {
+										haptic.trigger('light');
+										addDay();
+									}
+								"
+							/>
+						</div>
+
+						<div class="flex items-center gap-0.5">
+							<UButton
+								v-for="preset in closingPresets"
+								:key="preset.label"
+								:label="preset.label"
+								color="neutral"
+								:variant="
+									isPresetActive(preset.duration)
+										? 'soft'
+										: 'ghost'
+								"
+								:size="sizeMd"
+								:class="
+									isPresetActive(preset.duration)
+										? 'bg-accented'
+										: 'text-muted hover:bg-accented'
+								"
+								@click="
+									() => {
+										haptic.trigger('light');
+										date = minDate.add(preset.duration);
+									}
+								"
+							/>
+						</div>
+					</div>
+				</div>
+			</UFormField>
+
+			<UFormField name="slots">
+				<PollCalendar v-model="calendarSlots" />
+			</UFormField>
+
+			<div class="sticky bottom-4 z-40">
+				<div
+					class="bg-elevated/85 ring-default flex flex-col gap-1.5 rounded-xl p-1.5 shadow-lg ring backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+				>
+					<p
+						class="bg-default rounded-lg px-3 py-1.5 text-sm tabular-nums"
+						:class="isValid ? 'text-highlighted' : 'text-muted'"
+					>
+						{{ summary }}
+					</p>
+
+					<UButton
+						type="submit"
+						label="Lancer le Creno"
+						trailing-icon="i-lucide-arrow-right"
+						color="neutral"
+						variant="solid"
+						:size="sizeXl"
+						:loading="pending"
+						:disabled="pending || !isValid"
+						class="w-full justify-center sm:w-fit"
+						@click="haptic.trigger('medium')"
+					/>
+				</div>
+			</div>
 		</UForm>
 	</UContainer>
 </template>

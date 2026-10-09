@@ -4,10 +4,6 @@ import type {
 	CalendarView,
 } from '~/types/calendar';
 import { createInjectionState } from '@vueuse/core';
-import { useCalendarGrid } from '~/composables/useCalendarGrid';
-import { useCalendarNavigation } from '~/composables/useCalendarNavigation';
-import { useCalendarSlots } from '~/composables/useCalendarSlots';
-import { useCalendarDrag } from '~/composables/useCalendarDrag';
 
 const [useProvideCalendarContext, useInjectCalendarContext] =
 	createInjectionState(
@@ -16,26 +12,13 @@ const [useProvideCalendarContext, useInjectCalendarContext] =
 			config: CalendarConfig,
 			defaultView: CalendarView,
 		) => {
-			const grid = useCalendarGrid(config);
-			const navigation = useCalendarNavigation(defaultView);
-			const slotActions = useCalendarSlots(slots, config);
-			const drag = useCalendarDrag({
-				...config,
-				isDesktop: grid.isDesktop,
-				addSlot: slotActions.addSlot,
-				removeSlot: slotActions.removeSlot,
-				updateSlot: slotActions.updateSlot,
-				slots,
-			});
+			// Coarse on purpose, the past only has to grow by the minute
+			const now = useNow({ interval: 60_000 });
+			const calendar = useCalendarView(defaultView);
+			const slotActions = useCalendarSlots(slots);
+			const draft = useSlotDraft(config, slotActions.addSlot, now);
 
-			return {
-				config,
-				slots,
-				grid,
-				navigation,
-				slotActions,
-				drag,
-			};
+			return { config, slots, calendar, slotActions, draft, now };
 		},
 	);
 
