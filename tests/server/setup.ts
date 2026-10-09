@@ -7,6 +7,7 @@ import {
 	createPoll,
 	requirePollBySlug,
 	getPollWithSlots,
+	getPollResults,
 	createParticipantWithVotes,
 } from './mocks';
 
@@ -19,5 +20,6 @@ vi.stubGlobal('createError', createError);
 vi.stubGlobal('createPoll', createPoll);
 vi.stubGlobal('requirePollBySlug', requirePollBySlug);
 vi.stubGlobal('getPollWithSlots', getPollWithSlots);
+vi.stubGlobal('getPollResults', getPollResults);
 vi.stubGlobal('createParticipantWithVotes', createParticipantWithVotes);
 vi.stubGlobal('validateSlotIds', vi.fn());

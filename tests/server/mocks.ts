@@ -8,6 +8,7 @@ export const setResponseStatus = vi.fn();
 export const createPoll = vi.fn();
 export const requirePollBySlug = vi.fn();
 export const getPollWithSlots = vi.fn();
+export const getPollResults = vi.fn();
 export const createParticipantWithVotes = vi.fn();
 
 export function createError(opts: { statusCode: number; message: string }) {
