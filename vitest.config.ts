@@ -24,6 +24,7 @@ export default defineConfig({
 						'app/**/*.{test,spec}.ts',
 						'tests/app/**/*.{test,spec}.ts',
 					],
+					setupFiles: ['./tests/app/setup.ts'],
 					restoreMocks: true,
 				},
 			}),
