@@ -1,18 +1,7 @@
 <script setup lang="ts">
 	import type { CalendarTimeSlot } from '~/types/calendar';
 
-	const props = defineProps<{
-		modelValue: CalendarTimeSlot[];
-	}>();
-
-	const emit = defineEmits<{
-		'update:modelValue': [value: CalendarTimeSlot[]];
-	}>();
-
-	const slots = computed({
-		get: () => props.modelValue,
-		set: (value) => emit('update:modelValue', value),
-	});
+	const slots = defineModel<CalendarTimeSlot[]>({ required: true });
 </script>
 
 <template>

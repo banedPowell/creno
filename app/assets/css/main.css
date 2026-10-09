@@ -1,24 +1,31 @@
 @import 'tailwindcss';
 @import '@nuxt/ui';
 
+@theme {
+	--font-sans: 'Geist', sans-serif;
+	--font-mono: 'Geist Mono', monospace;
+}
+
 :root {
+	--ui-radius: 0.25rem;
 	--ui-primary: black;
 }
 
-.dark {
-	--ui-primary: white;
+:root,
+.light {
+	--ui-bg-muted: var(--ui-color-neutral-100);
+	--ui-bg-elevated: var(--ui-color-neutral-100);
+	--ui-bg-accented: var(--ui-color-neutral-200);
+	--ui-text: var(--ui-color-neutral-900);
+	--ui-text-highlighted: var(--ui-color-neutral-950);
 }
 
-@theme static {
-	--color-dark-50: #fafafa; /* full white text */
-	--color-dark-100: #f4f4f5;
-	--color-dark-200: #e5e5e5; /* ← active text */
-	--color-dark-300: #d4d4d8;
-	--color-dark-400: #a1a1a1; /* ← muted-foreground */
-	--color-dark-500: #737373;
-	--color-dark-600: #525252;
-	--color-dark-700: #262626;
-	--color-dark-800: #1f1f1f; /* base border fallback */
-	--color-dark-900: #0a0a0a; /* ← background */
-	--color-dark-950: #050505;
+.dark {
+	--ui-bg: var(--ui-color-neutral-950);
+	--ui-bg-muted: var(--ui-color-neutral-900);
+	--ui-bg-elevated: var(--ui-color-neutral-900);
+	--ui-bg-accented: var(--ui-color-neutral-800);
+	--ui-text: var(--ui-color-neutral-100);
+	--ui-text-highlighted: var(--ui-color-neutral-50);
+	--ui-primary: white;
 }
