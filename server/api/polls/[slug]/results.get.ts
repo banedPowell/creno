@@ -8,7 +8,7 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const poll = await requirePollBySlug(slug);
+	const { adminToken: _adminToken, ...poll } = await requirePollBySlug(slug);
 	const results = await getPollResults(poll.id);
 
 	return { ...poll, ...results };

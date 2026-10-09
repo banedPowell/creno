@@ -45,6 +45,26 @@ describe('GET /api/polls/[slug]', () => {
 		expect(result).toEqual({ ...mockPoll, slots: mockSlots });
 	});
 
+	it("n'expose pas le token admin", async () => {
+		const mockPoll = {
+			id: 'poll-1',
+			title: 'Test',
+			slug: 'abc123',
+			adminToken: 'secret-admin-token',
+		};
+
+		vi.mocked(getRouterParam).mockReturnValue('abc123');
+		vi.mocked(requirePollBySlug).mockResolvedValue(mockPoll);
+		vi.mocked(getPollWithSlots).mockResolvedValue([]);
+
+		const handler = (
+			await import('../../../../server/api/polls/[slug].get')
+		).default;
+		const result = await handler(mockEvent);
+
+		expect(result).not.toHaveProperty('adminToken');
+	});
+
 	it("propage l'erreur 404 si le poll n'existe pas", async () => {
 		vi.mocked(getRouterParam).mockReturnValue('inexistant');
 		vi.mocked(requirePollBySlug).mockRejectedValue(
