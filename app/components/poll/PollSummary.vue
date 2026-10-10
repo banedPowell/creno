@@ -13,13 +13,22 @@
 </script>
 
 <template>
-	<header class="space-y-2">
-		<h1 class="text-highlighted text-3xl font-bold break-words md:text-4xl">
-			{{ title }}
-		</h1>
-		<p v-if="description" class="text-muted whitespace-pre-line">
-			{{ description }}
+	<header class="space-y-3">
+		<div>
+			<h1
+				class="text-highlighted text-3xl font-bold break-words md:text-4xl"
+			>
+				{{ title }}
+			</h1>
+			<p v-if="description" class="text-muted mt-1 whitespace-pre-line">
+				{{ description }}
+			</p>
+		</div>
+
+		<p
+			class="bg-elevated text-muted w-fit rounded-xl px-3 py-1.5 text-sm tabular-nums"
+		>
+			{{ details }}
 		</p>
-		<p class="text-muted text-sm tabular-nums">{{ details }}</p>
 	</header>
 </template>

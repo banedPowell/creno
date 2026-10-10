@@ -26,10 +26,7 @@
 </script>
 
 <template>
-	<section
-		class="bg-elevated space-y-3 rounded-xl p-4"
-		aria-labelledby="share-title"
-	>
+	<section class="space-y-3" aria-labelledby="share-title">
 		<div>
 			<h2 id="share-title" class="text-highlighted font-semibold">
 				Ton Creno est prêt, partage-le
@@ -40,17 +37,15 @@
 			</p>
 		</div>
 
-		<CopyField :value="url" label="Lien du Creno" />
-
-		<div class="flex flex-wrap gap-2">
+		<CopyField :value="url" label="Lien du Creno">
 			<UButton
 				v-if="canShare"
 				icon="i-lucide-share-2"
 				label="Partager"
 				color="neutral"
-				variant="soft"
+				variant="ghost"
 				:size="sizeMd"
-				class="hover:bg-accented"
+				class="text-muted hover:bg-accented"
 				@click="shareLink"
 			/>
 
@@ -59,16 +54,16 @@
 					icon="i-lucide-qr-code"
 					label="QR code"
 					color="neutral"
-					variant="soft"
+					variant="ghost"
 					:size="sizeMd"
-					class="hover:bg-accented"
+					class="text-muted hover:bg-accented"
 					@click="haptic.trigger('light')"
 				/>
 
 				<template #content>
 					<!-- eslint-disable vue/no-v-html -->
 					<div
-						class="rounded-lg bg-white p-3 [&_svg]:size-48"
+						class="rounded-xl bg-white p-3 [&_svg]:size-40 sm:[&_svg]:size-48"
 						role="img"
 						aria-label="QR code du lien du Creno"
 						v-html="qrCode"
@@ -76,6 +71,6 @@
 					<!-- eslint-enable vue/no-v-html -->
 				</template>
 			</UPopover>
-		</div>
+		</CopyField>
 	</section>
 </template>

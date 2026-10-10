@@ -24,7 +24,7 @@
 </script>
 
 <template>
-	<UContainer class="mt-8 max-w-3xl space-y-6 pb-16 md:mt-12">
+	<UContainer class="mt-8 max-w-3xl space-y-8 pb-28 md:mt-12">
 		<UEmpty
 			v-if="isNotFound"
 			icon="i-lucide-calendar-x"
@@ -63,7 +63,10 @@
 			<!-- The token lives in this browser's storage, the server can't see it -->
 			<ClientOnly>
 				<PollAdminLinkCard v-if="adminUrl" :url="adminUrl" />
-				<p v-else class="text-muted text-sm">
+				<p
+					v-else
+					class="bg-elevated text-muted w-fit rounded-xl px-3 py-1.5 text-sm"
+				>
 					Ce Creno n’a pas été créé depuis ce navigateur : seul le
 					partage est disponible ici.
 				</p>
