@@ -41,24 +41,28 @@
 			<UButton
 				v-if="canShare"
 				icon="i-lucide-share-2"
-				label="Partager"
+				aria-label="Partager"
 				color="neutral"
 				variant="ghost"
 				:size="sizeMd"
 				class="text-muted hover:bg-accented"
 				@click="shareLink"
-			/>
+			>
+				<span class="hidden sm:inline">Partager</span>
+			</UButton>
 
 			<UPopover>
 				<UButton
 					icon="i-lucide-qr-code"
-					label="QR code"
+					aria-label="QR code"
 					color="neutral"
 					variant="ghost"
 					:size="sizeMd"
 					class="text-muted hover:bg-accented"
 					@click="haptic.trigger('light')"
-				/>
+				>
+					<span class="hidden sm:inline">QR code</span>
+				</UButton>
 
 				<template #content>
 					<!-- eslint-disable vue/no-v-html -->

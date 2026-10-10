@@ -20,9 +20,7 @@
 </script>
 
 <template>
-	<div
-		class="bg-elevated flex flex-col gap-1.5 rounded-xl p-1.5 sm:flex-row sm:items-center"
-	>
+	<div class="bg-elevated flex min-w-0 items-center gap-1.5 rounded-xl p-1.5">
 		<div
 			class="flex min-w-0 flex-1 items-center"
 			:class="$slots.leading ? 'gap-1.5' : ''"
@@ -36,12 +34,12 @@
 				:aria-label="label"
 				:size="sizeMd"
 				class="bg-default min-w-0 flex-1 rounded-lg"
-				:ui="{ base: 'text-muted truncate px-3' }"
+				:ui="{ base: 'text-muted w-full min-w-0 truncate px-3' }"
 				@focus="selectAll"
 			/>
 		</div>
 
-		<div class="flex w-full items-center justify-end gap-1.5 sm:w-auto">
+		<div class="flex shrink-0 items-center gap-1.5">
 			<slot />
 
 			<UButton
@@ -49,7 +47,7 @@
 				color="neutral"
 				variant="solid"
 				:size="sizeMd"
-				class="press justify-center sm:w-fit"
+				class="press justify-center"
 				@click="copyValue"
 			>
 				<template #leading>

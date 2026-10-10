@@ -7,7 +7,9 @@
 </script>
 
 <template>
-	<div class="mb-4 flex items-end justify-between gap-2">
+	<div
+		class="mb-4 flex flex-col-reverse items-start justify-between gap-2 md:flex-row"
+	>
 		<div
 			class="flex flex-col-reverse flex-wrap items-center gap-2 md:flex-row"
 		>
