@@ -54,6 +54,7 @@
 					<UButton
 						variant="soft"
 						:size="sizeMd"
+						class="press"
 						label="Aujourd'hui"
 						@click="
 							() => {
@@ -120,7 +121,7 @@
 						:size="sizeMd"
 						:class="
 							calendar.view.value === 'day'
-								? 'hover:brightness-120'
+								? 'press hover:brightness-120'
 								: 'hover:bg-accented'
 						"
 						@click="
@@ -142,7 +143,7 @@
 						:size="sizeMd"
 						:class="
 							calendar.view.value === 'week'
-								? 'hover:brightness-120'
+								? 'press hover:brightness-120'
 								: 'hover:bg-accented'
 						"
 						@click="
@@ -164,7 +165,7 @@
 						:size="sizeMd"
 						:class="
 							calendar.view.value === 'month'
-								? 'hover:brightness-120'
+								? 'press hover:brightness-120'
 								: 'hover:bg-accented'
 						"
 						@click="

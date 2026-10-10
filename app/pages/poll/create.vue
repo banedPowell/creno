@@ -293,7 +293,7 @@
 						:size="sizeXl"
 						:loading="pending"
 						:disabled="pending || !isValid"
-						class="w-full justify-center sm:w-fit"
+						class="press w-full justify-center sm:w-fit"
 						@click="haptic.trigger('medium')"
 					/>
 				</div>

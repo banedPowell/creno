@@ -6,9 +6,12 @@
 	const haptic = useWebHaptics();
 	const { sizeMd } = useResponsiveButtonSize();
 	const { copy, copied } = useClipboard({ legacy: true });
+	const copyTick = ref(0);
 
 	async function copyValue() {
 		await copy(props.value);
+		if (!copied.value) return;
+		copyTick.value += 1;
 		haptic.trigger('success');
 	}
 
@@ -42,15 +45,33 @@
 			<slot />
 
 			<UButton
-				:icon="copied ? 'i-lucide-check' : 'i-lucide-copy'"
-				:label="copied ? 'Copié' : 'Copier'"
-				:aria-label="`Copier : ${label}`"
+				:aria-label="`${copied ? 'Copié' : 'Copier'} : ${label}`"
 				color="neutral"
 				variant="solid"
 				:size="sizeMd"
-				class="justify-center sm:w-fit"
+				class="press justify-center sm:w-fit"
 				@click="copyValue"
-			/>
+			>
+				<template #leading>
+					<CopyIcon :copied="copied" :tick="copyTick" />
+				</template>
+
+				<!-- Both labels stay in the layout, so the button keeps the wider width -->
+				<span class="grid">
+					<span
+						class="col-start-1 row-start-1"
+						:class="copied ? 'invisible' : undefined"
+					>
+						Copier
+					</span>
+					<span
+						class="col-start-1 row-start-1"
+						:class="copied ? undefined : 'invisible'"
+					>
+						Copié
+					</span>
+				</span>
+			</UButton>
 		</div>
 	</div>
 </template>
