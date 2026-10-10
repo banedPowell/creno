@@ -1,9 +1,13 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { mountSuspended } from '@nuxt/test-utils/runtime';
+import { mockNuxtImport, mountSuspended } from '@nuxt/test-utils/runtime';
 import { flushPromises, type VueWrapper } from '@vue/test-utils';
 import { UApp } from '#components';
 import CreatePage from '../../app/pages/poll/create.vue';
+import { OWNED_POLLS_KEY } from '../../app/composables/useOwnedPolls';
 import { clickColumn, mockColumnGeometry } from './helpers/calendarDom';
+
+const { navigateToMock } = vi.hoisted(() => ({ navigateToMock: vi.fn() }));
+mockNuxtImport('navigateTo', () => navigateToMock);
 
 // Friday 9 October 2026, 10:00: the closing date defaults to Friday 16
 const NOW = new Date(2026, 9, 9, 10, 0);
@@ -54,7 +58,10 @@ beforeEach(() => {
 	mockColumnGeometry();
 	// Only the poll API is answered here, the rest (icons…) goes through
 	const realFetch = globalThis.$fetch;
-	answer = () => Promise.resolve({ slug: 'abc' });
+	localStorage.clear();
+	navigateToMock.mockClear();
+	answer = () =>
+		Promise.resolve({ slug: 'abc', adminToken: 'tok', title: 'Réunion' });
 	fetchSpy = vi.fn((url: string, options?: object) =>
 		url === POLLS_URL ? answer() : realFetch(url, options),
 	);
@@ -164,7 +171,7 @@ describe('Create page: what is sent', () => {
 });
 
 describe('Create page: server answer', () => {
-	it('confirms a launched poll', async () => {
+	it('keeps the admin token and opens the creator page', async () => {
 		await mountPage();
 		await titleInput().setValue('Réunion');
 		await clickColumn(wrapper!, TOMORROW, '10:00');
@@ -172,10 +179,12 @@ describe('Create page: server answer', () => {
 		await submit();
 
 		await vi.waitFor(() =>
-			expect(document.body.textContent).toContain(
-				'Creno lancé avec succès',
-			),
+			expect(navigateToMock).toHaveBeenCalledWith('/poll/abc/admin'),
 		);
+		expect(
+			JSON.parse(localStorage.getItem(OWNED_POLLS_KEY)!).abc,
+		).toMatchObject({ adminToken: 'tok', title: 'Réunion' });
+		expect(document.body.textContent).toContain('Creno lancé avec succès');
 	});
 
 	it('shows the message the server sends back on failure', async () => {
@@ -199,5 +208,7 @@ describe('Create page: server answer', () => {
 				'La date de fermeture doit être dans le futur',
 			),
 		);
+		expect(navigateToMock).not.toHaveBeenCalled();
+		expect(localStorage.getItem(OWNED_POLLS_KEY)).toBe('{}');
 	});
 });
