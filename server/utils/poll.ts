@@ -46,6 +46,13 @@ export async function createPoll(data: {
 		})
 		.returning();
 
+	if (!poll) {
+		throw createError({
+			statusCode: 500,
+			message: 'Le sondage n’a pas pu être créé',
+		});
+	}
+
 	const slots = await db
 		.insert(slotsTable)
 		.values(

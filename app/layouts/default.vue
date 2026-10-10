@@ -32,6 +32,7 @@
 					color="neutral"
 					variant="solid"
 					:size="sizeMd"
+					class="press"
 					to="/poll/create"
 					@click="haptic.trigger('light')"
 				/>

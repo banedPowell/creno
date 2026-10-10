@@ -7,7 +7,9 @@
 </script>
 
 <template>
-	<div class="mb-4 flex items-end justify-between gap-2">
+	<div
+		class="mb-4 flex flex-col-reverse items-start justify-between gap-2 md:flex-row"
+	>
 		<div
 			class="flex flex-col-reverse flex-wrap items-center gap-2 md:flex-row"
 		>
@@ -54,6 +56,7 @@
 					<UButton
 						variant="soft"
 						:size="sizeMd"
+						class="press"
 						label="Aujourd'hui"
 						@click="
 							() => {
@@ -120,7 +123,7 @@
 						:size="sizeMd"
 						:class="
 							calendar.view.value === 'day'
-								? 'hover:brightness-120'
+								? 'press hover:brightness-120'
 								: 'hover:bg-accented'
 						"
 						@click="
@@ -142,7 +145,7 @@
 						:size="sizeMd"
 						:class="
 							calendar.view.value === 'week'
-								? 'hover:brightness-120'
+								? 'press hover:brightness-120'
 								: 'hover:bg-accented'
 						"
 						@click="
@@ -164,7 +167,7 @@
 						:size="sizeMd"
 						:class="
 							calendar.view.value === 'month'
-								? 'hover:brightness-120'
+								? 'press hover:brightness-120'
 								: 'hover:bg-accented'
 						"
 						@click="

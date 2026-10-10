@@ -89,14 +89,18 @@
 	const { sizeMd, sizeXl } = useResponsiveButtonSize();
 
 	const toast = useToast();
+	const { savePoll } = useOwnedPolls();
 	const submitBody = ref<Record<string, unknown>>({});
 
-	const { execute, pending, error } = await useFetch('/api/polls/create', {
-		method: 'POST',
-		body: submitBody,
-		immediate: false,
-		watch: [],
-	});
+	const { data, execute, pending, error } = await useFetch(
+		'/api/polls/create',
+		{
+			method: 'POST',
+			body: submitBody,
+			immediate: false,
+			watch: [],
+		},
+	);
 
 	async function onSubmit() {
 		if (!result.value.success) return;
@@ -109,8 +113,11 @@
 				description: msg ?? 'Une erreur est survenue.',
 				color: 'error',
 			});
-		} else {
+		} else if (data.value?.slug && data.value.adminToken) {
+			const { slug, adminToken, title } = data.value;
+			savePoll(slug, { adminToken, title });
 			toast.add({ title: 'Creno lancé avec succès', color: 'success' });
+			await navigateTo(`/poll/${slug}/admin`);
 		}
 	}
 </script>
@@ -286,7 +293,7 @@
 						:size="sizeXl"
 						:loading="pending"
 						:disabled="pending || !isValid"
-						class="w-full justify-center sm:w-fit"
+						class="press w-full justify-center sm:w-fit"
 						@click="haptic.trigger('medium')"
 					/>
 				</div>

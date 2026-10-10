@@ -31,3 +31,13 @@ Object.defineProperty(globalThis, 'localStorage', {
 	configurable: true,
 	writable: true,
 });
+
+// Nuxt loads the app manifest one second after the app is ready. That timer
+// outlives the test environment, then calls $fetch after teardown removed it.
+const navigatorRef = globalThis.navigator;
+if (navigatorRef) {
+	Object.defineProperty(navigatorRef, 'connection', {
+		configurable: true,
+		value: { effectiveType: 'slow-2g' },
+	});
+}

@@ -20,6 +20,10 @@
 	--ui-text-highlighted: var(--ui-color-neutral-950);
 }
 
+@utility press {
+	@apply origin-center transition-transform duration-150 ease-out active:not-disabled:scale-97;
+}
+
 .dark {
 	--ui-bg: var(--ui-color-neutral-950);
 	--ui-bg-muted: var(--ui-color-neutral-900);
