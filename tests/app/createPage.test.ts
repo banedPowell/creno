@@ -17,6 +17,7 @@ const POLLS_URL = '/api/polls/create';
 
 let wrapper: VueWrapper | undefined;
 let fetchSpy: ReturnType<typeof vi.fn>;
+let realFetch: typeof globalThis.$fetch;
 let answer: () => Promise<unknown>;
 
 const mountPage = async () => {
@@ -57,7 +58,7 @@ beforeEach(() => {
 	vi.setSystemTime(NOW);
 	mockColumnGeometry();
 	// Only the poll API is answered here, the rest (icons…) goes through
-	const realFetch = globalThis.$fetch;
+	realFetch = globalThis.$fetch;
 	localStorage.clear();
 	navigateToMock.mockClear();
 	answer = () =>
@@ -80,6 +81,9 @@ afterEach(() => {
 	wrapper = undefined;
 	vi.useRealTimers();
 	vi.unstubAllGlobals();
+	// Unstub drops $fetch when its original descriptor was not captured.
+	// Nuxt's manifest timer calls it a second later.
+	globalThis.$fetch = realFetch;
 });
 
 describe('Create page: guiding the user', () => {
