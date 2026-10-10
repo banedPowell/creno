@@ -33,21 +33,22 @@
 
 	const slots = defineModel<CalendarTimeSlot[]>({ required: true });
 
-	const { calendar, revealNextBest } = useProvideCalendarContext(
-		slots,
-		{
-			hourStart: props.hourStart,
-			hourEnd: props.hourEnd,
-			snapMinutes: props.snapMinutes,
-			clickSlotDuration: props.clickSlotDuration,
-		},
-		props.defaultView,
-		{
-			initialDate: props.initialDate,
-			minDate: props.minDate,
-			vote: props.vote,
-		},
-	);
+	const { calendar, revealNextBest, bestSlots, bestIndex } =
+		useProvideCalendarContext(
+			slots,
+			{
+				hourStart: props.hourStart,
+				hourEnd: props.hourEnd,
+				snapMinutes: props.snapMinutes,
+				clickSlotDuration: props.clickSlotDuration,
+			},
+			props.defaultView,
+			{
+				initialDate: props.initialDate,
+				minDate: props.minDate,
+				vote: props.vote,
+			},
+		);
 
 	defineShortcuts({
 		t: calendar.goToday,
@@ -60,6 +61,10 @@
 		shift_arrowleft: calendar.prevBigPeriod,
 		shift_arrowright: calendar.nextBigPeriod,
 	});
+
+	// The poll page draws the button outside this component, where the
+	// calendar context is not visible
+	defineExpose({ bestSlots, bestIndex, revealNextBest });
 </script>
 
 <template>

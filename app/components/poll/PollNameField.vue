@@ -1,20 +1,14 @@
 <script setup lang="ts">
-	import { useWebHaptics } from 'web-haptics/vue';
-
 	defineProps<{
 		// Whose answer the form holds, when it is not a new one
 		editing?: { name: string; own: boolean } | null;
-		// An answer of their own is the only one a visitor may hold, there is
-		// nothing to go back to
-		cancellable?: boolean;
+		// A saved answer stays put until the visitor asks to change it
+		disabled?: boolean;
 	}>();
-
-	const emit = defineEmits<{ cancel: [] }>();
 
 	const name = defineModel<string>({ required: true });
 
 	const { sizeMd } = useResponsiveButtonSize();
-	const haptic = useWebHaptics();
 </script>
 
 <template>
@@ -35,6 +29,7 @@
 				aria-label="Votre nom"
 				placeholder="Camille"
 				autocomplete="given-name"
+				:disabled="disabled"
 				:size="sizeMd"
 				class="w-full sm:w-64"
 				:ui="{
@@ -59,20 +54,6 @@
 					}}</span>
 				</span>
 			</span>
-			<UButton
-				v-if="cancellable"
-				label="Annuler"
-				variant="ghost"
-				color="neutral"
-				:size="sizeMd"
-				class="hover:bg-accented"
-				@click="
-					() => {
-						haptic.trigger('light');
-						emit('cancel');
-					}
-				"
-			/>
 		</div>
 	</div>
 </template>

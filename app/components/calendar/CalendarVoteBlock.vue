@@ -95,7 +95,6 @@
 							: status === 'maybe'
 								? 'hover:bg-vote-maybe-hover cursor-pointer'
 								: 'hover:bg-elevated cursor-pointer',
-				isBest && 'outline-primary outline-2 outline-offset-1',
 				faded && '[&>*]:opacity-50',
 				highlighted && 'animate-slot-reveal z-10',
 			]"
@@ -109,11 +108,13 @@
 			<span
 				class="absolute inset-y-1 left-1 w-1 rounded-full"
 				:class="
-					status === 'yes'
-						? 'bg-success'
-						: status === 'maybe'
-							? 'bg-warning'
-							: 'bg-accented'
+					isBest
+						? 'bg-primary'
+						: status === 'yes'
+							? 'bg-success'
+							: status === 'maybe'
+								? 'bg-warning'
+								: 'bg-accented'
 				"
 			/>
 

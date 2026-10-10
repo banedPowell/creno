@@ -169,6 +169,7 @@ describe('Vote page: loading', () => {
 		expect(wrapper!.text()).toContain('Ce Creno est fermé');
 		expect(nameInput().exists()).toBe(false);
 		expect(submitButton().exists()).toBe(false);
+		expect(wrapper!.find('[data-best-button]').exists()).toBe(true);
 		expect(slotBlocks()).toHaveLength(2);
 		expect(wrapper!.text()).toContain('Alice');
 	});
@@ -269,12 +270,16 @@ describe('Vote page: a new answer', () => {
 		});
 
 		await vi.waitFor(() => expect(nameInput().element.value).toBe('Bob'));
-		expect(statuses()).toEqual(['yes', 'maybe']);
-		expect(wrapper!.find('[data-editing]').text()).toContain(
-			'Vous modifiez votre réponse',
-		);
-		expect(submitButton().text()).toBe('Modifier ma réponse');
+		// Back to the shared view: Bob's choices are in the tally, not the colours
+		expect(statuses()).toEqual(['none', 'none']);
+		expect(slotBlocks()[0]!.find('[data-vote-tally]').text()).toMatch(/1/);
+		expect(nameInput().element.disabled).toBe(true);
+		expect(wrapper!.find('[data-revise]').text()).toBe('Modifier');
+		expect(submitButton().exists()).toBe(false);
 		expect(wrapper!.find('[data-own]').text()).toContain('Bob');
+
+		await slotBlocks()[0]!.trigger('click');
+		expect(statuses()).toEqual(['none', 'none']);
 	});
 
 	it('turns read-only when the poll closed meanwhile', async () => {
@@ -325,14 +330,39 @@ describe('Vote page: changing one’s own answer', () => {
 		await mountPage();
 
 		await vi.waitFor(() => expect(nameInput().element.value).toBe('Alice'));
-		expect(statuses()).toEqual(['none', 'yes']);
-		expect(wrapper!.find('[data-editing]').text()).toContain(
-			'Vous modifiez votre réponse',
-		);
-		expect(wrapper!.find('[data-editing]').text()).not.toContain('Annuler');
+		expect(statuses()).toEqual(['none', 'none']);
+		expect(nameInput().element.disabled).toBe(true);
+		expect(wrapper!.find('[data-revise]').text()).toBe('Modifier');
+		expect(wrapper!.find('[data-cancel-revision]').exists()).toBe(false);
 		expect(wrapper!.find('[data-own]').text()).toContain('Vous');
-		// Alice's own vote shows through the colour, not in the tally
-		expect(slotBlocks()[1]!.find('[data-vote-tally]').exists()).toBe(false);
+		expect(slotBlocks()[1]!.find('[data-vote-tally]').text()).toMatch(/1/);
+
+		await wrapper!.find('[data-own]').trigger('click');
+		const [missed, chosen] = slotBlocks();
+		expect(missed!.attributes('data-faded')).toBeDefined();
+		expect(chosen!.attributes('data-faded')).toBeUndefined();
+
+		await slotBlocks()[0]!.trigger('click');
+		expect(statuses()).toEqual(['none', 'none']);
+	});
+
+	it('restores the saved answer when the change is cancelled', async () => {
+		storeOwnVote();
+		await mountPage();
+		await vi.waitFor(() => expect(nameInput().element.value).toBe('Alice'));
+
+		await wrapper!.find('[data-revise]').trigger('click');
+		await nameInput().setValue('Alicia');
+		await slotBlocks()[0]!.trigger('click');
+		expect(statuses()).toEqual(['yes', 'yes']);
+
+		await wrapper!.find('[data-cancel-revision]').trigger('click');
+
+		expect(nameInput().element.value).toBe('Alice');
+		expect(nameInput().element.disabled).toBe(true);
+		expect(statuses()).toEqual(['none', 'none']);
+		expect(wrapper!.find('[data-revise]').exists()).toBe(true);
+		expect(submitButton().exists()).toBe(false);
 	});
 
 	it('sends the change with the token', async () => {
@@ -340,6 +370,7 @@ describe('Vote page: changing one’s own answer', () => {
 		answer = async () => ({ id: 'p1' });
 		await mountPage();
 		await vi.waitFor(() => expect(nameInput().element.value).toBe('Alice'));
+		await wrapper!.find('[data-revise]').trigger('click');
 
 		await slotBlocks()[0]!.trigger('click');
 		await submit();
@@ -372,6 +403,7 @@ describe('Vote page: changing one’s own answer', () => {
 			);
 		await mountPage();
 		await vi.waitFor(() => expect(nameInput().element.value).toBe('Alice'));
+		await wrapper!.find('[data-revise]').trigger('click');
 
 		await submit();
 
@@ -412,7 +444,7 @@ describe('Vote page: open policy', () => {
 		expect(wrapper!.find('[data-editing]').text()).toContain(
 			'Vous modifiez la réponse de Alice',
 		);
-		expect(submitButton().text()).toBe('Enregistrer les modifications');
+		expect(submitButton().text()).toBe('Valider');
 
 		await slotBlocks()[1]!.trigger('click');
 		await wrapper!.find('form').trigger('submit');
@@ -430,11 +462,7 @@ describe('Vote page: open policy', () => {
 		await wrapper!.find('button[aria-pressed]').trigger('click');
 		await wrapper!.find('[data-edit-participant]').trigger('click');
 
-		const cancel = wrapper!
-			.find('[data-editing]')
-			.findAll('button')
-			.find((b) => b.text() === 'Annuler')!;
-		await cancel.trigger('click');
+		await wrapper!.find('[data-cancel-revision]').trigger('click');
 
 		expect(nameInput().element.value).toBe('');
 		expect(statuses()).toEqual(['none', 'none']);

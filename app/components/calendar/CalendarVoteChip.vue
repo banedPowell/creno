@@ -74,7 +74,6 @@
 						: status === 'yes'
 							? 'hover:bg-vote-yes-hover cursor-pointer'
 							: 'hover:bg-vote-maybe-hover cursor-pointer',
-				isBest && 'ring-primary ring-2 ring-inset',
 				continuesBefore && 'rounded-l-none',
 				continuesAfter && 'rounded-r-none',
 				faded && '[&>*]:opacity-50',
@@ -89,11 +88,13 @@
 			<span
 				class="size-1.5 shrink-0 rounded-full"
 				:class="
-					status === 'yes'
-						? 'bg-success'
-						: status === 'maybe'
-							? 'bg-warning'
-							: 'bg-accented'
+					isBest
+						? 'bg-primary'
+						: status === 'yes'
+							? 'bg-success'
+							: status === 'maybe'
+								? 'bg-warning'
+								: 'bg-accented'
 				"
 			/>
 			<span class="truncate font-medium tabular-nums">{{ label }}</span>

@@ -326,7 +326,7 @@ describe('Calendar: answering a poll', () => {
 		expect(b!.find('[data-best-badge]').text()).toContain('Top');
 	});
 
-	it('jumps to the most wanted slot from the header and pulses it', async () => {
+	it('jumps to the most wanted slot and pulses it', async () => {
 		const NEXT_WEEK = '2026-10-14';
 		const { wrapper } = await mountVoteCalendar(
 			[
@@ -336,10 +336,9 @@ describe('Calendar: answering a poll', () => {
 			{ best: ['b'] },
 		);
 		expect(wrapper.text()).toContain('5 octobre — 11 octobre 2026');
+		expect(wrapper.find('[data-best-button]').exists()).toBe(false);
 
-		const button = wrapper.find('[data-best-button]');
-		expect(button.text()).toBe('Meilleur créneau');
-		await button.trigger('click');
+		wrapper.findComponent(CalendarRoot).vm.revealNextBest();
 		await nextTick();
 		await nextTick();
 
@@ -356,21 +355,21 @@ describe('Calendar: answering a poll', () => {
 			],
 			{ best: ['a', 'b'] },
 		);
-		const button = () => wrapper.find('[data-best-button]');
+		const calendar = wrapper.findComponent(CalendarRoot);
 		const highlighted = () =>
 			wrapper.find('[data-highlighted]').attributes('aria-label');
 
-		await button().trigger('click');
+		calendar.vm.revealNextBest();
 		await nextTick();
 		await nextTick();
-		expect(button().text()).toBe('Meilleur créneau 1/2');
+		expect(calendar.vm.bestIndex).toBe(0);
 		// In time order, the morning one first
 		expect(highlighted()).toContain('09:00 – 11:00');
 
-		await button().trigger('click');
+		calendar.vm.revealNextBest();
 		await nextTick();
 		await nextTick();
-		expect(button().text()).toBe('Meilleur créneau 2/2');
+		expect(calendar.vm.bestIndex).toBe(1);
 		expect(highlighted()).toContain('14:00 – 16:00');
 	});
 

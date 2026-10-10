@@ -57,6 +57,8 @@
 	const focusedParticipantId = ref<string | null>(null);
 	// The answer the form holds, null for a new one
 	const editingId = ref<string | null>(null);
+	// A saved answer is only changed after an explicit click
+	const revising = ref(false);
 
 	const { save, get, forget } = useOwnVotes();
 	// Read once mounted: the server cannot see this browser's storage
@@ -72,6 +74,7 @@
 
 	const resetForm = () => {
 		editingId.value = null;
+		revising.value = false;
 		state.name = '';
 		votes.value = {};
 	};
@@ -116,20 +119,31 @@
 					: rest;
 	};
 
+	// Outside a change, the calendar only shows the answers already sent
+	const EMPTY_VOTES: Record<string, VoteStatus> = {};
+	const answering = computed(() => !editingId.value || revising.value);
+
 	const voteState: CalendarVoteState = {
-		votes,
-		// The answer being changed already shows through the slot colours, it
-		// is not counted a second time
+		votes: computed(() => (answering.value ? votes.value : EMPTY_VOTES)),
+		// While a change is open, that answer shows through the slot colours
+		// and is not counted a second time
 		voters: computed(() =>
 			Object.fromEntries(
 				(poll.value?.slots ?? []).map((slot) => [
 					slot.id,
-					slot.voters.filter((voter) => voter.id !== editingId.value),
+					revising.value
+						? slot.voters.filter(
+								(voter) => voter.id !== editingId.value,
+							)
+						: slot.voters,
 				]),
 			),
 		),
 		bestSlotIds: computed(() => bestSlotIds(poll.value?.slots ?? [])),
-		readonly: isClosed,
+		// Closed, or holding a saved answer that has not been opened for edit
+		readonly: computed(
+			() => isClosed.value || (!!editingId.value && !revising.value),
+		),
 		focusedParticipantId,
 		cycleVote,
 	};
@@ -143,8 +157,9 @@
 			: null,
 	);
 
-	// Going back to a new answer only makes sense where several are allowed
-	const cancellable = computed(() => isOpenPolicy.value);
+	const locked = computed(
+		() => !!editingId.value && !revising.value && !isClosed.value,
+	);
 
 	// Everything sent goes through this one check, the form only displays it
 	const result = computed(() =>
@@ -175,13 +190,20 @@
 			.join(' · ');
 	});
 
-	const submitLabel = computed(() =>
-		!editingId.value
-			? 'Envoyer ma réponse'
-			: isEditingOwn.value
-				? 'Modifier ma réponse'
-				: 'Enregistrer les modifications',
-	);
+	const calendar = useTemplateRef<{
+		bestSlots: { length: number };
+		bestIndex: number;
+		revealNextBest: () => void;
+	}>('calendar');
+
+	const hasBest = computed(() => (calendar.value?.bestSlots.length ?? 0) > 0);
+
+	const bestLabel = computed(() => {
+		const count = calendar.value?.bestSlots.length ?? 0;
+		if (count <= 1) return 'Meilleur créneau';
+		const index = Math.max(calendar.value?.bestIndex ?? -1, 0);
+		return `Meilleur créneau ${index + 1}/${count}`;
+	});
 
 	const { sizeXl } = useResponsiveButtonSize();
 	const toast = useToast();
@@ -206,6 +228,7 @@
 		});
 		await refresh();
 		loadAnswer(created.id);
+		revising.value = false;
 	};
 
 	const sendChange = async (participantId: string, body: VotePayload) => {
@@ -224,12 +247,16 @@
 			color: 'success',
 		});
 		await refresh();
-		if (own) loadAnswer(participantId);
-		else resetForm();
+		if (own) {
+			loadAnswer(participantId);
+			revising.value = false;
+		} else resetForm();
 	};
 
 	async function onSubmit() {
 		if (!result.value.success || pending.value) return;
+		// A saved answer is not sent again until it has been opened
+		if (editingId.value && !revising.value) return;
 		pending.value = true;
 		try {
 			if (editingId.value)
@@ -276,8 +303,27 @@
 		}
 	}
 
+	const startRevision = () => {
+		revising.value = true;
+	};
+
+	const cancelRevision = () => {
+		if (isEditingOwn.value && editingId.value) {
+			loadAnswer(editingId.value);
+			revising.value = false;
+			return;
+		}
+		resetForm();
+	};
+
+	const revealBest = () => {
+		haptic.trigger('medium');
+		calendar.value?.revealNextBest();
+	};
+
 	const onEditParticipant = (id: string) => {
 		loadAnswer(id);
+		revising.value = true;
 		focusedParticipantId.value = null;
 	};
 </script>
@@ -336,14 +382,14 @@
 				<UFormField v-if="!isClosed" name="name">
 					<PollNameField
 						v-model="state.name"
-						:editing="editing"
-						:cancellable="cancellable"
-						@cancel="resetForm"
+						:editing="revising ? editing : null"
+						:disabled="locked"
 					/>
 				</UFormField>
 
 				<UFormField name="votes">
 					<CalendarRoot
+						ref="calendar"
 						:model-value="calendarSlots"
 						:hour-start="0"
 						:hour-end="24"
@@ -366,11 +412,12 @@
 					@edit="onEditParticipant"
 				/>
 
-				<div v-if="!isClosed" class="sticky bottom-4 z-40">
+				<div v-if="!isClosed || hasBest" class="sticky bottom-4 z-40">
 					<div
 						class="bg-elevated/85 ring-default flex flex-col gap-1.5 rounded-xl p-1.5 shadow-lg ring backdrop-blur sm:flex-row sm:items-center sm:justify-between"
 					>
 						<p
+							v-if="!isClosed"
 							data-vote-summary
 							class="bg-default rounded-lg px-3 py-1.5 text-sm tabular-nums"
 							:class="isValid ? 'text-highlighted' : 'text-muted'"
@@ -378,20 +425,91 @@
 							{{ summary }}
 						</p>
 
-						<UButton
-							type="submit"
-							:label="submitLabel"
-							:trailing-icon="
-								editingId ? 'i-lucide-check' : 'i-lucide-send'
-							"
-							color="neutral"
-							variant="solid"
-							:size="sizeXl"
-							:loading="pending"
-							:disabled="pending || !isValid"
-							class="press w-full justify-center sm:w-fit"
-							@click="haptic.trigger('medium')"
-						/>
+						<div
+							class="flex flex-wrap items-center justify-end gap-1.5"
+						>
+							<UTooltip
+								v-if="hasBest"
+								:text="
+									(calendar?.bestSlots.length ?? 0) > 1
+										? 'Créneaux les plus demandés, à égalité'
+										: 'Aller au créneau le plus demandé'
+								"
+								:kbds="['B']"
+							>
+								<UButton
+									data-best-button
+									type="button"
+									variant="soft"
+									color="neutral"
+									icon="i-lucide-star"
+									:size="sizeXl"
+									class="press"
+									:label="bestLabel"
+									@click="revealBest"
+								/>
+							</UTooltip>
+
+							<UButton
+								v-if="locked"
+								data-revise
+								type="button"
+								label="Modifier"
+								icon="i-lucide-pencil"
+								color="neutral"
+								variant="solid"
+								:size="sizeXl"
+								class="press"
+								@click="
+									() => {
+										haptic.trigger('medium');
+										startRevision();
+									}
+								"
+							/>
+							<template v-else-if="revising">
+								<UButton
+									data-cancel-revision
+									type="button"
+									label="Annuler"
+									variant="ghost"
+									color="neutral"
+									:size="sizeXl"
+									class="press"
+									@click="
+										() => {
+											haptic.trigger('light');
+											cancelRevision();
+										}
+									"
+								/>
+								<UButton
+									type="submit"
+									label="Valider"
+									trailing-icon="i-lucide-check"
+									color="neutral"
+									variant="solid"
+									:size="sizeXl"
+									:loading="pending"
+									:disabled="pending || !isValid"
+									class="press"
+									@click="haptic.trigger('medium')"
+								/>
+							</template>
+							<UButton
+								v-else-if="!isClosed"
+								type="submit"
+								label="Envoyer ma réponse"
+								trailing-icon="i-lucide-send"
+								color="neutral"
+								variant="solid"
+								:size="sizeXl"
+								:loading="pending"
+								:disabled="pending || !isValid"
+								class="press w-full justify-center sm:w-fit"
+								@click="haptic.trigger('medium')"
+							/>
+						</div>
 					</div>
 				</div>
 			</UForm>
