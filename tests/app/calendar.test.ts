@@ -10,7 +10,10 @@ import {
 	layoutAllDay,
 	layoutDay,
 } from '../../app/utils/calendarLayout';
-import { calendarSlotToApiSlot } from '../../app/utils/calendarSlot';
+import {
+	apiSlotToCalendarSlot,
+	calendarSlotToApiSlot,
+} from '../../app/utils/calendarSlot';
 
 const timed = (
 	id: string,
@@ -133,5 +136,39 @@ describe('calendarSlotToApiSlot', () => {
 			timed('a', '2026-10-12', '22:00', '24:00'),
 		);
 		expect(end).toBe(new Date(2026, 9, 13).toISOString());
+	});
+});
+
+describe('apiSlotToCalendarSlot', () => {
+	// What the API stores: a start instant and a length in seconds
+	const stored = (slot: CalendarTimeSlot) => {
+		const { start, end } = calendarSlotToApiSlot(slot);
+		return {
+			id: slot.id,
+			startTime: start,
+			duration: (Date.parse(end) - Date.parse(start)) / 1000,
+		};
+	};
+
+	it('reads a timed slot back within its day', () => {
+		const slot = timed('a', '2026-10-12', '09:15', '11:00');
+		expect(apiSlotToCalendarSlot(stored(slot))).toEqual(slot);
+	});
+
+	it('reads a slot ending at midnight as ending at 24:00', () => {
+		const slot = timed('a', '2026-10-12', '22:00', '24:00');
+		expect(apiSlotToCalendarSlot(stored(slot))).toEqual(slot);
+	});
+
+	it('reads a whole-day slot back, over several days', () => {
+		const slot = allDay('a', '2026-10-12', '2026-10-14');
+		expect(apiSlotToCalendarSlot(stored(slot))).toEqual(slot);
+	});
+
+	it('keeps a whole-day slot across the clock change', () => {
+		// 25 October 2026 lasts 25 hours in Paris
+		const slot = allDay('a', '2026-10-25', '2026-10-25');
+		expect(stored(slot).duration).toBe(25 * 3600);
+		expect(apiSlotToCalendarSlot(stored(slot))).toEqual(slot);
 	});
 });

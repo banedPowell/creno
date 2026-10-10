@@ -2,6 +2,7 @@
 	import { useWebHaptics } from 'web-haptics/vue';
 
 	const { calendar } = useCalendarContext();
+
 	const { sizeMd } = useResponsiveButtonSize();
 	const haptic = useWebHaptics();
 </script>

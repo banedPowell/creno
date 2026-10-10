@@ -1,3 +1,8 @@
+import type { Ref } from 'vue';
+import type { VoteStatus } from '#shared/utils/votePayload';
+
+export type { VoteStatus };
+
 export interface CalendarTimeSlot {
 	id: string;
 	startDate: string; // YYYY-MM-DD
@@ -14,6 +19,29 @@ export interface CalendarConfig {
 	hourEnd: number;
 	snapMinutes: number;
 	clickSlotDuration: number; // minutes
+}
+
+export interface SlotVoter {
+	id: string;
+	name: string;
+	status: VoteStatus;
+}
+
+// What a calendar showing an existing poll needs: the visitor's own answers,
+// and the ones already sent, per slot
+export interface CalendarVoteState {
+	votes: Readonly<Ref<Record<string, VoteStatus>>>;
+	voters: Readonly<Ref<Record<string, SlotVoter[]>>>;
+	bestSlotIds: Readonly<Ref<string[]>>;
+	readonly: Readonly<Ref<boolean>>;
+	focusedParticipantId: Readonly<Ref<string | null>>;
+	cycleVote: (slotId: string) => void;
+}
+
+export interface CalendarViewOptions {
+	initialDate?: Date;
+	// The earliest day the calendar can go back to, today when left out
+	minDate?: Date;
 }
 
 export interface CalendarDay {

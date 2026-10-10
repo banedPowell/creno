@@ -1,4 +1,5 @@
 <script setup lang="ts">
+	import { CalendarSlotChip, CalendarVoteChip } from '#components';
 	import type { CalendarTimeSlot } from '~/types/calendar';
 
 	// A week is one grid: the day numbers, then a fixed stack of slots each day
@@ -15,7 +16,9 @@
 		month: number;
 	}>();
 
-	const { slots, calendar, draft } = useCalendarContext();
+	const { slots, calendar, draft, vote } = useCalendarContext();
+
+	const SlotChip = vote ? CalendarVoteChip : CalendarSlotChip;
 
 	const days = computed(() =>
 		eachDay(props.weekStart, 7).map((date) => toCalendarDay(date)),
@@ -129,7 +132,8 @@
 			class="border-default row-span-full"
 			:class="[
 				index !== 0 && 'border-l',
-				day.isPast ? 'bg-muted/50 cursor-default' : 'cursor-cell',
+				day.isPast && 'bg-muted/50',
+				vote || day.isPast ? 'cursor-default' : 'cursor-cell',
 			]"
 			:style="{ gridColumn: index + 1 }"
 			@pointerdown="
@@ -160,11 +164,12 @@
 			{{ day.date.getDate() }}
 		</button>
 
-		<CalendarSlotChip
+		<component
+			:is="SlotChip"
 			v-for="bar in bars"
 			:key="bar.slot.id"
 			:time-slot="bar.slot"
-			:ghost="bar.slot.id === DRAFT_SLOT_ID"
+			:ghost="bar.slot.id === DRAFT_SLOT_ID || undefined"
 			:continues-before="bar.continuesBefore"
 			:continues-after="bar.continuesAfter"
 			class="mx-1 self-start"
@@ -182,7 +187,8 @@
 			v-for="({ day, timed, more }, index) in cells"
 			:key="`slots-${day.dateStr}`"
 		>
-			<CalendarSlotChip
+			<component
+				:is="SlotChip"
 				v-for="{ slot, row } in timed"
 				:key="slot.id"
 				:time-slot="slot"
@@ -206,7 +212,8 @@
 				/>
 
 				<template #content>
-					<CalendarSlotChip
+					<component
+						:is="SlotChip"
 						v-for="slot in more.slots"
 						:key="slot.id"
 						:time-slot="slot"

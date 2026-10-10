@@ -93,8 +93,14 @@ export async function getPollResults(pollId: string) {
 		.where(eq(slotsTable.pollId, pollId))
 		.all();
 
+	// Picked one by one, the edit tokens must never leave the server
 	const participants = await db
-		.select()
+		.select({
+			id: participantsTable.id,
+			name: participantsTable.name,
+			pollId: participantsTable.pollId,
+			createdAt: participantsTable.createdAt,
+		})
 		.from(participantsTable)
 		.where(eq(participantsTable.pollId, pollId))
 		.all();
@@ -110,15 +116,29 @@ export async function getPollResults(pollId: string) {
 					.all()
 			: [];
 
+	const names = new Map(participants.map((p) => [p.id, p.name]));
+
 	const slotsWithVotes = slots.map((slot) => {
-		const slotVotes = votes.filter((v) => v.slotId === slot.id);
-		const voterIds = new Set(slotVotes.map((v) => v.participantId));
+		const voters = votes
+			.filter((v) => v.slotId === slot.id && names.has(v.participantId))
+			.map((v) => ({
+				id: v.participantId,
+				name: names.get(v.participantId)!,
+				status: v.status,
+			}));
 		return {
 			...slot,
-			voters: participants.filter((p) => voterIds.has(p.id)),
-			voteCount: slotVotes.length,
+			voters,
+			yesCount: voters.filter((v) => v.status === 'yes').length,
+			maybeCount: voters.filter((v) => v.status === 'maybe').length,
 		};
 	});
 
-	return { participants, slots: slotsWithVotes };
+	const participantsWithCounts = participants.map((participant) => ({
+		...participant,
+		voteCount: votes.filter((v) => v.participantId === participant.id)
+			.length,
+	}));
+
+	return { participants: participantsWithCounts, slots: slotsWithVotes };
 }

@@ -2,6 +2,11 @@ import { sqliteTable, integer, text, check } from 'drizzle-orm/sqlite-core';
 import { sql } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 
+export const VOTE_POLICIES = ['token', 'open'] as const;
+export type VotePolicy = (typeof VOTE_POLICIES)[number];
+
+// No CHECK on vote_policy: adding one makes drizzle-kit rebuild the table and
+// copy a column the old one does not have yet
 export const pollsTable = sqliteTable('polls', {
 	id: text('id').primaryKey(),
 	title: text('title').notNull(),
@@ -20,6 +25,11 @@ export const pollsTable = sqliteTable('polls', {
 	closedAt: integer('closed_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)),
+	// Who may change an answer: its author only, through the token handed
+	// out on voting, or anyone
+	votePolicy: text('vote_policy', { enum: VOTE_POLICIES })
+		.notNull()
+		.default('token'),
 });
 
 export const slotsTable = sqliteTable('slots', {
@@ -39,6 +49,9 @@ export const participantsTable = sqliteTable('participants', {
 	pollId: text('poll_id')
 		.notNull()
 		.references(() => pollsTable.id, { onDelete: 'cascade' }),
+	// Proves who wrote the answer. Nullable: SQLite cannot add a NOT NULL
+	// column without a constant default, so rows from before it have none
+	editToken: text('edit_token').$defaultFn(() => nanoid(32)),
 	createdAt: integer('created_at', { mode: 'timestamp' })
 		.notNull()
 		.$defaultFn(() => new Date()),

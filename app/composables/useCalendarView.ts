@@ -1,4 +1,8 @@
-import type { CalendarDay, CalendarView } from '~/types/calendar';
+import type {
+	CalendarDay,
+	CalendarView,
+	CalendarViewOptions,
+} from '~/types/calendar';
 import {
 	addDays,
 	addMonths,
@@ -13,12 +17,29 @@ import {
 	toCalendarDay,
 } from '~/utils/calendarDates';
 
-export const useCalendarView = (defaultView: CalendarView = 'week') => {
+export const useCalendarView = (
+	defaultView: CalendarView = 'week',
+	options: CalendarViewOptions = {},
+) => {
 	const isDesktop = useMediaQuery('(min-width: 768px)', { ssrWidth: 768 });
 
-	const view = shallowRef<CalendarView>(defaultView);
-	const currentDate = shallowRef(startOfDay(new Date()));
 	const today = computed(() => startOfDay(new Date()));
+	// How far back the calendar goes: today, or the earlier day an existing
+	// poll starts on
+	const earliest = computed(() =>
+		options.minDate && options.minDate < today.value
+			? startOfDay(options.minDate)
+			: today.value,
+	);
+
+	const view = shallowRef<CalendarView>(defaultView);
+	const currentDate = shallowRef(
+		startOfDay(
+			options.initialDate && options.initialDate > earliest.value
+				? options.initialDate
+				: earliest.value,
+		),
+	);
 
 	// A phone has no room for seven timed columns, the month grid still fits
 	watch(
@@ -42,17 +63,17 @@ export const useCalendarView = (defaultView: CalendarView = 'week') => {
 	const monthWeeks = computed(() => monthWeekStarts(currentDate.value));
 
 	const canGoPrevPeriod = computed(() => {
-		if (view.value === 'day') return currentDate.value > today.value;
-		if (view.value === 'week') return weekStart.value > today.value;
-		return monthIndex(currentDate.value) > monthIndex(today.value);
+		if (view.value === 'day') return currentDate.value > earliest.value;
+		if (view.value === 'week') return weekStart.value > earliest.value;
+		return monthIndex(currentDate.value) > monthIndex(earliest.value);
 	});
 
 	const canGoPrevBigPeriod = computed(() => {
 		if (view.value === 'day')
-			return addDays(currentDate.value, -7) >= today.value;
+			return addDays(currentDate.value, -7) >= earliest.value;
 		if (view.value === 'week')
-			return monthIndex(currentDate.value) > monthIndex(today.value);
-		return monthIndex(currentDate.value) - 12 >= monthIndex(today.value);
+			return monthIndex(currentDate.value) > monthIndex(earliest.value);
+		return monthIndex(currentDate.value) - 12 >= monthIndex(earliest.value);
 	});
 
 	const periodLabel = computed(() => {
@@ -72,9 +93,10 @@ export const useCalendarView = (defaultView: CalendarView = 'week') => {
 		return addMonths(date, direction * (big ? 12 : 1));
 	};
 
-	// Going back never lands before today, a period that straddles it opens on it
+	// Going back never lands before the earliest day, a period that straddles
+	// it opens on it
 	const goTo = (date: Date) => {
-		currentDate.value = date < today.value ? today.value : date;
+		currentDate.value = date < earliest.value ? earliest.value : date;
 	};
 
 	const prevPeriod = () => {
@@ -106,6 +128,7 @@ export const useCalendarView = (defaultView: CalendarView = 'week') => {
 		prevBigPeriod,
 		nextBigPeriod,
 		goToday,
+		goToDate: goTo,
 		openDay,
 	};
 };
