@@ -1,4 +1,6 @@
 <script setup lang="ts">
+	import { CalendarSlotChip, CalendarVoteChip } from '#components';
+
 	withDefaults(
 		defineProps<{
 			maxHeight?: number;
@@ -6,11 +8,20 @@
 		{ maxHeight: 80 },
 	);
 
-	const { config, slots, calendar, draft } = useCalendarContext();
+	const { config, slots, calendar, draft, vote } = useCalendarContext();
 
 	const ALL_DAY_LANE_HEIGHT = 26;
-	// The hour the grid opens on, the small hours stay a scroll away
+	// The hour the grid opens on, the small hours stay a scroll away. Slots to
+	// answer open on the earliest one shown instead
 	const START_HOUR = 7;
+	const startHour = () => {
+		if (!vote) return START_HOUR;
+		const visible = new Set(calendar.days.value.map((day) => day.dateStr));
+		const starts = slots.value
+			.filter((slot) => !slot.allDay && visible.has(slot.startDate))
+			.map((slot) => Math.floor(timeToMinutes(slot.startTime) / 60));
+		return starts.length ? Math.min(...starts) : START_HOUR;
+	};
 
 	const days = calendar.days;
 	const dayStrs = computed(() => days.value.map((day) => day.dateStr));
@@ -52,7 +63,7 @@
 			// Leaves room for the opening hour's label, centred on its line
 			top: Math.max(
 				0,
-				(START_HOUR - config.hourStart) * HOUR_HEIGHT - 16,
+				(startHour() - config.hourStart) * HOUR_HEIGHT - 16,
 			),
 		});
 	});
@@ -126,7 +137,8 @@
 						:style="{ gridColumn: index + 2 }"
 					/>
 
-					<CalendarSlotChip
+					<component
+						:is="vote ? CalendarVoteChip : CalendarSlotChip"
 						v-for="bar in allDayBars"
 						:key="bar.slot.id"
 						:time-slot="bar.slot"

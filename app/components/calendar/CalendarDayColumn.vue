@@ -7,7 +7,7 @@
 		positioned: PositionedSlot[];
 	}>();
 
-	const { config, draft, now } = useCalendarContext();
+	const { config, draft, now, vote } = useCalendarContext();
 
 	const hours = computed(() => config.hourEnd - config.hourStart);
 
@@ -45,6 +45,7 @@
 
 	const onPointermove = (event: PointerEvent) => {
 		if (
+			vote ||
 			event.pointerType !== 'mouse' ||
 			(event.target as HTMLElement).closest('[data-calendar-slot]')
 		) {
@@ -95,7 +96,7 @@
 		class="border-default relative border-l"
 		:class="[
 			day.isPast && 'bg-muted/50',
-			day.isPast || overPast ? 'cursor-default' : 'cursor-cell',
+			vote || day.isPast || overPast ? 'cursor-default' : 'cursor-cell',
 		]"
 		:style="{ height: `${hours * HOUR_HEIGHT}px` }"
 		@pointerdown="
@@ -146,6 +147,7 @@
 					{{ item.slot.startTime }} – {{ item.slot.endTime }}
 				</span>
 			</div>
+			<CalendarVoteBlock v-else-if="vote" :positioned="item" />
 			<CalendarSlotBlock v-else :positioned="item" />
 		</template>
 

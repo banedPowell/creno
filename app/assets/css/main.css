@@ -24,6 +24,42 @@
 	@apply origin-center transition-transform duration-150 ease-out active:not-disabled:scale-97;
 }
 
+/* Tinted like a translucent fill, but solid: the grid lines must not show
+   through an answered slot */
+@utility bg-vote-yes {
+	background-color: color-mix(in oklab, var(--ui-success) 15%, var(--ui-bg));
+}
+
+@utility bg-vote-yes-hover {
+	background-color: color-mix(in oklab, var(--ui-success) 25%, var(--ui-bg));
+}
+
+@utility bg-vote-maybe {
+	background-color: color-mix(in oklab, var(--ui-warning) 12%, var(--ui-bg));
+}
+
+@utility bg-vote-maybe-hover {
+	background-color: color-mix(in oklab, var(--ui-warning) 22%, var(--ui-bg));
+}
+
+@keyframes slot-reveal {
+	0%,
+	100% {
+		scale: 1;
+		box-shadow: 0 0 0 0 transparent;
+	}
+	50% {
+		scale: 1.02;
+		box-shadow:
+			0 0 0 2px color-mix(in oklab, var(--ui-success) 80%, transparent),
+			0 0 0 10px color-mix(in oklab, var(--ui-success) 40%, transparent);
+	}
+}
+
+@utility animate-slot-reveal {
+	animation: slot-reveal 0.7s ease-in-out 3;
+}
+
 .dark {
 	--ui-bg: var(--ui-color-neutral-950);
 	--ui-bg-muted: var(--ui-color-neutral-900);

@@ -3,7 +3,13 @@ import { mountSuspended } from '@nuxt/test-utils/runtime';
 import type { VueWrapper } from '@vue/test-utils';
 import { UApp } from '#components';
 import PollCalendar from '../../app/components/calendar/PollCalendar.vue';
-import type { CalendarTimeSlot } from '../../app/types/calendar';
+import CalendarRoot from '../../app/components/calendar/CalendarRoot.vue';
+import type {
+	CalendarTimeSlot,
+	CalendarVoteState,
+	SlotVoter,
+	VoteStatus,
+} from '../../app/types/calendar';
 import {
 	clickColumn,
 	column,
@@ -207,6 +213,245 @@ describe('PollCalendar: overlapping slots', () => {
 		await clickColumn(wrapper, TOMORROW, '08:30');
 		expect(slots.value).toHaveLength(2);
 		expect(blocks()).toHaveLength(2);
+	});
+});
+
+const mountVoteCalendar = async (
+	initial: CalendarTimeSlot[],
+	options: {
+		voters?: Record<string, SlotVoter[]>;
+		best?: string[];
+		readonly?: boolean;
+		focused?: string | null;
+	} = {},
+) => {
+	const votes = ref<Record<string, VoteStatus>>({});
+	const vote: CalendarVoteState = {
+		votes,
+		voters: ref(options.voters ?? {}),
+		bestSlotIds: ref(options.best ?? []),
+		readonly: ref(options.readonly ?? false),
+		focusedParticipantId: ref(options.focused ?? null),
+		cycleVote: (id) => {
+			const { [id]: current, ...rest } = votes.value;
+			votes.value =
+				current === undefined
+					? { ...rest, [id]: 'yes' }
+					: current === 'yes'
+						? { ...rest, [id]: 'maybe' }
+						: rest;
+		},
+	};
+	const Harness = defineComponent({
+		setup: () => () =>
+			h(UApp, null, {
+				default: () =>
+					h(CalendarRoot, {
+						modelValue: initial,
+						hourStart: 0,
+						hourEnd: 24,
+						vote,
+					}),
+			}),
+	});
+	wrapper = await mountSuspended(Harness, {
+		global: { stubs: { UIcon: true, Icon: true } },
+	});
+	return { wrapper, votes };
+};
+
+describe('Calendar: answering a poll', () => {
+	it('cycles a slot through present, maybe and back to absent', async () => {
+		const { votes } = await mountVoteCalendar([
+			timed('a', TOMORROW, '09:00', '11:00'),
+		]);
+		const block = () => blocks()[0]!;
+		expect(block().attributes('data-vote')).toBe('none');
+		expect(block().attributes('aria-label')).toContain(
+			'absent, 0 présent, 0 peut-être, cliquer pour présent',
+		);
+
+		await block().trigger('click');
+		expect(votes.value).toEqual({ a: 'yes' });
+		expect(block().attributes('data-vote')).toBe('yes');
+
+		await block().trigger('click');
+		expect(votes.value).toEqual({ a: 'maybe' });
+		expect(block().attributes('data-vote')).toBe('maybe');
+
+		await block().trigger('click');
+		expect(votes.value).toEqual({});
+		expect(block().attributes('data-vote')).toBe('none');
+	});
+
+	it('draws nothing on the grid', async () => {
+		const { wrapper } = await mountVoteCalendar([
+			timed('a', TOMORROW, '09:00', '11:00'),
+		]);
+		await clickColumn(wrapper, TOMORROW, '14:00');
+		await dragColumn(wrapper, TOMORROW, '15:00', '17:00');
+		expect(blocks()).toHaveLength(1);
+	});
+
+	it('counts the answers already sent on the slot', async () => {
+		await mountVoteCalendar([timed('a', TOMORROW, '09:00', '11:00')], {
+			voters: {
+				a: [
+					{ id: 'p1', name: 'Alice', status: 'yes' },
+					{ id: 'p2', name: 'Bob', status: 'yes' },
+					{ id: 'p3', name: 'Chloé', status: 'maybe' },
+				],
+			},
+		});
+		const block = blocks()[0]!;
+		expect(block.find('[data-vote-tally]').text()).toMatch(/2\s+1/);
+		expect(block.attributes('aria-label')).toContain(
+			'2 présents, 1 peut-être',
+		);
+	});
+
+	it('marks the most wanted slot', async () => {
+		await mountVoteCalendar(
+			[
+				timed('a', TOMORROW, '09:00', '11:00'),
+				timed('b', TOMORROW, '14:00', '16:00'),
+			],
+			{ best: ['b'] },
+		);
+		const [a, b] = blocks();
+		expect(a!.attributes('data-best')).toBeUndefined();
+		expect(b!.attributes('data-best')).toBeDefined();
+		expect(b!.attributes('aria-label')).toContain('le plus demandé');
+		expect(a!.find('[data-best-badge]').exists()).toBe(false);
+		expect(b!.find('[data-best-badge]').text()).toContain('Top');
+	});
+
+	it('jumps to the most wanted slot from the header and pulses it', async () => {
+		const NEXT_WEEK = '2026-10-14';
+		const { wrapper } = await mountVoteCalendar(
+			[
+				timed('a', TOMORROW, '09:00', '11:00'),
+				timed('b', NEXT_WEEK, '14:00', '16:00'),
+			],
+			{ best: ['b'] },
+		);
+		expect(wrapper.text()).toContain('5 octobre — 11 octobre 2026');
+
+		const button = wrapper.find('[data-best-button]');
+		expect(button.text()).toBe('Meilleur créneau');
+		await button.trigger('click');
+		await nextTick();
+		await nextTick();
+
+		expect(wrapper.text()).toContain('12 octobre — 18 octobre 2026');
+		const [b] = blocks();
+		expect(b!.attributes('data-highlighted')).toBeDefined();
+	});
+
+	it('steps through slots tied for the lead', async () => {
+		const { wrapper } = await mountVoteCalendar(
+			[
+				timed('a', TOMORROW, '14:00', '16:00'),
+				timed('b', TOMORROW, '09:00', '11:00'),
+			],
+			{ best: ['a', 'b'] },
+		);
+		const button = () => wrapper.find('[data-best-button]');
+		const highlighted = () =>
+			wrapper.find('[data-highlighted]').attributes('aria-label');
+
+		await button().trigger('click');
+		await nextTick();
+		await nextTick();
+		expect(button().text()).toBe('Meilleur créneau 1/2');
+		// In time order, the morning one first
+		expect(highlighted()).toContain('09:00 – 11:00');
+
+		await button().trigger('click');
+		await nextTick();
+		await nextTick();
+		expect(button().text()).toBe('Meilleur créneau 2/2');
+		expect(highlighted()).toContain('14:00 – 16:00');
+	});
+
+	it('shows no best slot button before anyone answers', async () => {
+		const { wrapper } = await mountVoteCalendar([
+			timed('a', TOMORROW, '09:00', '11:00'),
+		]);
+		expect(wrapper.find('[data-best-button]').exists()).toBe(false);
+	});
+
+	it('steps back the slots a focused participant left out', async () => {
+		await mountVoteCalendar(
+			[
+				timed('a', TOMORROW, '09:00', '11:00'),
+				timed('b', TOMORROW, '14:00', '16:00'),
+			],
+			{
+				voters: { a: [{ id: 'p1', name: 'Alice', status: 'yes' }] },
+				focused: 'p1',
+			},
+		);
+		const [a, b] = blocks();
+		expect(a!.attributes('data-faded')).toBeUndefined();
+		expect(b!.attributes('data-faded')).toBeDefined();
+		// Dimmed, yet still solid: only its content fades
+		expect(b!.classes()).toContain('bg-muted');
+		expect(b!.classes().some((c) => /^opacity-/.test(c))).toBe(false);
+	});
+
+	it('keeps answered slots solid, the grid never shows through', async () => {
+		await mountVoteCalendar([
+			timed('a', TOMORROW, '09:00', '11:00'),
+			timed('b', TOMORROW, '14:00', '16:00'),
+		]);
+		await blocks()[0]!.trigger('click');
+		await blocks()[1]!.trigger('click');
+		await blocks()[1]!.trigger('click');
+
+		const [yes, maybe] = blocks();
+		expect(yes!.classes()).toContain('bg-vote-yes');
+		expect(maybe!.classes()).toContain('bg-vote-maybe');
+		for (const block of [yes!, maybe!])
+			expect(block.classes().some((c) => /^bg-.+\/\d+$/.test(c))).toBe(
+				false,
+			);
+	});
+
+	it('ignores clicks once the poll is closed', async () => {
+		const { votes } = await mountVoteCalendar(
+			[timed('a', TOMORROW, '09:00', '11:00')],
+			{ readonly: true },
+		);
+		await blocks()[0]!.trigger('click');
+		expect(votes.value).toEqual({});
+		expect(blocks()[0]!.attributes('aria-disabled')).toBe('true');
+	});
+
+	it('ignores clicks on a slot that has already started', async () => {
+		const { votes } = await mountVoteCalendar([
+			timed('a', TODAY, '09:00', '11:00'),
+		]);
+		await blocks()[0]!.trigger('click');
+		expect(votes.value).toEqual({});
+		expect(blocks()[0]!.attributes('aria-label')).toContain('déjà passé');
+	});
+
+	it('answers whole-day slots from the month view', async () => {
+		const { votes } = await mountVoteCalendar([
+			{
+				id: 'd',
+				startDate: TOMORROW,
+				endDate: TOMORROW,
+				startTime: '00:00',
+				endTime: '00:00',
+				allDay: true,
+			},
+		]);
+		await pressKey('m');
+		const chip = wrapper!.find('[data-calendar-slot][data-vote]');
+		await chip.trigger('click');
+		expect(votes.value).toEqual({ d: 'yes' });
 	});
 });
 

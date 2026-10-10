@@ -32,8 +32,47 @@ describe('POST /api/polls/[slug]/vote', () => {
 			await import('../../../../server/api/polls/[slug]/vote.post')
 		).default;
 
+		await expect(handler(mockEvent)).rejects.toThrow('Indiquez votre nom');
+	});
+
+	it('retourne 400 si le nom ne contient que des espaces', async () => {
+		vi.mocked(getRouterParam).mockReturnValue('test-slug');
+		vi.mocked(readBody).mockResolvedValue({ name: '   ', votes: [] });
+
+		const handler = (
+			await import('../../../../server/api/polls/[slug]/vote.post')
+		).default;
+
+		await expect(handler(mockEvent)).rejects.toThrow('Indiquez votre nom');
+	});
+
+	it('retourne 400 sans corps de requête', async () => {
+		vi.mocked(getRouterParam).mockReturnValue('test-slug');
+		vi.mocked(readBody).mockResolvedValue(undefined);
+
+		const handler = (
+			await import('../../../../server/api/polls/[slug]/vote.post')
+		).default;
+
+		await expect(handler(mockEvent)).rejects.toThrow('Indiquez votre nom');
+	});
+
+	it('retourne 400 si un créneau reçoit deux votes', async () => {
+		vi.mocked(getRouterParam).mockReturnValue('test-slug');
+		vi.mocked(readBody).mockResolvedValue({
+			name: 'Alice',
+			votes: [
+				{ slotId: 'slot-1', status: 'yes' },
+				{ slotId: 'slot-1', status: 'maybe' },
+			],
+		});
+
+		const handler = (
+			await import('../../../../server/api/polls/[slug]/vote.post')
+		).default;
+
 		await expect(handler(mockEvent)).rejects.toThrow(
-			'Le nom du participant est requis',
+			'Un créneau ne peut recevoir qu’un seul vote',
 		);
 	});
 
@@ -45,9 +84,7 @@ describe('POST /api/polls/[slug]/vote', () => {
 			await import('../../../../server/api/polls/[slug]/vote.post')
 		).default;
 
-		await expect(handler(mockEvent)).rejects.toThrow(
-			'Le nom du participant est requis',
-		);
+		await expect(handler(mockEvent)).rejects.toThrow('Indiquez votre nom');
 	});
 
 	it('retourne 400 si un vote a un slotId invalide', async () => {
@@ -78,7 +115,7 @@ describe('POST /api/polls/[slug]/vote', () => {
 		).default;
 
 		await expect(handler(mockEvent)).rejects.toThrow(
-			'Statut invalide "no"',
+			'Statut invalide. Valeurs acceptées : yes, maybe',
 		);
 	});
 
@@ -108,7 +145,7 @@ describe('POST /api/polls/[slug]/vote', () => {
 
 		vi.mocked(getRouterParam).mockReturnValue('test-slug');
 		vi.mocked(readBody).mockResolvedValue({
-			name: 'Alice',
+			name: '  Alice  ',
 			votes: [{ slotId: 'slot-1', status: 'yes' }],
 		});
 		vi.mocked(requirePollBySlug).mockResolvedValue({

@@ -1,7 +1,14 @@
 <script setup lang="ts">
 	import { useWebHaptics } from 'web-haptics/vue';
 
-	const { calendar } = useCalendarContext();
+	const { calendar, bestSlots, bestIndex, revealNextBest } =
+		useCalendarContext();
+
+	const bestLabel = computed(() =>
+		bestSlots.value.length > 1
+			? `Meilleur créneau ${Math.max(bestIndex.value, 0) + 1}/${bestSlots.value.length}`
+			: 'Meilleur créneau',
+	);
 	const { sizeMd } = useResponsiveButtonSize();
 	const haptic = useWebHaptics();
 </script>
@@ -62,6 +69,31 @@
 							() => {
 								haptic.trigger('medium');
 								calendar.goToday();
+							}
+						"
+					/>
+				</UTooltip>
+
+				<UTooltip
+					v-if="bestSlots.length"
+					:text="
+						bestSlots.length > 1
+							? 'Créneaux les plus demandés, à égalité'
+							: 'Aller au créneau le plus demandé'
+					"
+					:kbds="['B']"
+				>
+					<UButton
+						data-best-button
+						variant="soft"
+						icon="i-lucide-star"
+						:size="sizeMd"
+						class="press"
+						:label="bestLabel"
+						@click="
+							() => {
+								haptic.trigger('medium');
+								revealNextBest();
 							}
 						"
 					/>
