@@ -9,6 +9,7 @@
 	);
 
 	const { config, slots, calendar, draft, vote } = useCalendarContext();
+	const answering = computed(() => !!vote && !vote.picking);
 
 	const ALL_DAY_LANE_HEIGHT = 26;
 	// The hour the grid opens on, the small hours stay a scroll away. Slots to
@@ -138,7 +139,7 @@
 					/>
 
 					<component
-						:is="vote ? CalendarVoteChip : CalendarSlotChip"
+						:is="answering ? CalendarVoteChip : CalendarSlotChip"
 						v-for="bar in allDayBars"
 						:key="bar.slot.id"
 						:time-slot="bar.slot"

@@ -8,6 +8,8 @@
 	}>();
 
 	const { config, draft, now, vote } = useCalendarContext();
+	// An organiser picking a slot still draws and moves the others
+	const answering = computed(() => !!vote && !vote.picking);
 
 	const hours = computed(() => config.hourEnd - config.hourStart);
 
@@ -45,7 +47,7 @@
 
 	const onPointermove = (event: PointerEvent) => {
 		if (
-			vote ||
+			answering.value ||
 			event.pointerType !== 'mouse' ||
 			(event.target as HTMLElement).closest('[data-calendar-slot]')
 		) {
@@ -96,7 +98,9 @@
 		class="border-default relative border-l"
 		:class="[
 			day.isPast && 'bg-muted/50',
-			vote || day.isPast || overPast ? 'cursor-default' : 'cursor-cell',
+			answering || day.isPast || overPast
+				? 'cursor-default'
+				: 'cursor-cell',
 		]"
 		:style="{ height: `${hours * HOUR_HEIGHT}px` }"
 		@pointerdown="
@@ -147,7 +151,7 @@
 					{{ item.slot.startTime }} – {{ item.slot.endTime }}
 				</span>
 			</div>
-			<CalendarVoteBlock v-else-if="vote" :positioned="item" />
+			<CalendarVoteBlock v-else-if="answering" :positioned="item" />
 			<CalendarSlotBlock v-else :positioned="item" />
 		</template>
 

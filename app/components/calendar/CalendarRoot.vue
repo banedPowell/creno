@@ -33,22 +33,28 @@
 
 	const slots = defineModel<CalendarTimeSlot[]>({ required: true });
 
+	// Kept as one object: the gestures read it while they run, so a change in
+	// the advanced options applies to the next hover or click
+	const config = reactive({
+		hourStart: props.hourStart,
+		hourEnd: props.hourEnd,
+		snapMinutes: props.snapMinutes,
+		clickSlotDuration: props.clickSlotDuration,
+	});
+	watch(
+		() => [props.snapMinutes, props.clickSlotDuration] as const,
+		([snapMinutes, clickSlotDuration]) => {
+			config.snapMinutes = snapMinutes;
+			config.clickSlotDuration = clickSlotDuration;
+		},
+	);
+
 	const { calendar, revealNextBest, bestSlots, bestIndex } =
-		useProvideCalendarContext(
-			slots,
-			{
-				hourStart: props.hourStart,
-				hourEnd: props.hourEnd,
-				snapMinutes: props.snapMinutes,
-				clickSlotDuration: props.clickSlotDuration,
-			},
-			props.defaultView,
-			{
-				initialDate: props.initialDate,
-				minDate: props.minDate,
-				vote: props.vote,
-			},
-		);
+		useProvideCalendarContext(slots, config, props.defaultView, {
+			initialDate: props.initialDate,
+			minDate: props.minDate,
+			vote: props.vote,
+		});
 
 	defineShortcuts({
 		t: calendar.goToday,

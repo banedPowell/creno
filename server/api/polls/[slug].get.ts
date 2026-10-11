@@ -8,8 +8,9 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const { adminToken: _adminToken, ...poll } = await requirePollBySlug(slug);
+	const poll = await requirePollBySlug(slug);
+	requirePollAccess(event, poll);
 	const slots = await getPollWithSlots(poll.id);
 
-	return { ...poll, slots };
+	return { ...toPublicPoll(poll), slots };
 });

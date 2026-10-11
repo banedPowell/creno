@@ -25,6 +25,7 @@ export default defineEventHandler(async (event) => {
 	}
 
 	const poll = await requirePollBySlug(slug);
+	requirePollAccess(event, poll);
 	const participant = await requireParticipant(poll.id, participantId);
 
 	if (poll.closedAt && poll.closedAt <= new Date()) {

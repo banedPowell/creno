@@ -4,6 +4,10 @@
 	import type { InternalApi } from 'nitropack/types';
 	import type { CalendarVoteState, VoteStatus } from '~/types/calendar';
 	import type { OwnVote } from '~/composables/useOwnVotes';
+	import {
+		ADMIN_TOKEN_HEADER,
+		PASSWORD_HEADER,
+	} from '#shared/utils/pollSettings';
 
 	// A built URL matches every `/api/polls/*` route, the type has to be named
 	type PollResults = InternalApi['/api/polls/:slug/results']['get'];
@@ -12,13 +16,50 @@
 	const route = useRoute();
 	const slug = computed(() => String(route.params.slug));
 
+	const { save, get, forget } = useOwnVotes();
+	const { getAdminToken } = useOwnedPolls();
+	// Read once mounted: the server cannot see this browser's storage
+	const ownEntry = shallowRef<OwnVote | null>(null);
+	// Kept for the tab only, typed again in a new one
+	const password = useSessionStorage(`creno:password:${slug.value}`, '');
+	const mounted = useMounted();
+
+	// What proves this browser may see the poll, and the answers it hides
+	const credentials = computed<Record<string, string>>(() => {
+		if (!mounted.value) return {};
+		const adminToken = getAdminToken(slug.value);
+		return {
+			...(password.value
+				? { [PASSWORD_HEADER]: encodeURIComponent(password.value) }
+				: {}),
+			...(ownEntry.value
+				? { [EDIT_TOKEN_HEADER]: ownEntry.value.editToken }
+				: {}),
+			...(adminToken ? { [ADMIN_TOKEN_HEADER]: adminToken } : {}),
+		};
+	});
+
 	const {
 		data: poll,
 		error,
 		refresh,
-	} = await useFetch<PollResults>(() => `/api/polls/${slug.value}/results`);
+	} = await useFetch<PollResults>(() => `/api/polls/${slug.value}/results`, {
+		headers: credentials,
+		watch: false,
+	});
 
 	const isNotFound = computed(() => error.value?.statusCode === 404);
+	const needsPassword = computed(() => error.value?.statusCode === 401);
+	const wrongPassword = shallowRef(false);
+	const unlocking = shallowRef(false);
+
+	const unlock = async (value: string) => {
+		unlocking.value = true;
+		password.value = value;
+		await refresh();
+		wrongPassword.value = needsPassword.value;
+		unlocking.value = false;
+	};
 
 	useSeoMeta({
 		title: () => (poll.value ? `${poll.value.title} · Creno` : 'Creno'),
@@ -60,9 +101,6 @@
 	// A saved answer is only changed after an explicit click
 	const revising = ref(false);
 
-	const { save, get, forget } = useOwnVotes();
-	// Read once mounted: the server cannot see this browser's storage
-	const ownEntry = shallowRef<OwnVote | null>(null);
 	const isEditingOwn = computed(
 		() =>
 			!!editingId.value &&
@@ -100,12 +138,15 @@
 	};
 
 	// One answer per browser: once sent, the page comes back to it
-	onMounted(() => {
+	onMounted(async () => {
 		const entry = get(slug.value);
-		if (!entry) return;
-		if (!poll.value?.participants.some((p) => p.id === entry.participantId))
+		ownEntry.value = entry ?? null;
+		// The server render went without them: the poll may have stayed
+		// locked, or its answers hidden
+		if (Object.keys(credentials.value).length) await refresh();
+		if (!entry || !poll.value) return;
+		if (!poll.value.participants.some((p) => p.id === entry.participantId))
 			return forgetOwn();
-		ownEntry.value = entry;
 		if (!isClosed.value) loadAnswer(entry.participantId);
 	});
 
@@ -146,7 +187,14 @@
 		),
 		focusedParticipantId,
 		cycleVote,
+		chosenSlotId: computed(() => poll.value?.chosenSlotId ?? null),
 	};
+
+	const chosenSlot = computed(() =>
+		calendarSlots.value.find(
+			(slot) => slot.id === poll.value?.chosenSlotId,
+		),
+	);
 
 	const editing = computed(() =>
 		editingId.value
@@ -212,7 +260,7 @@
 	const sendNew = async (body: VotePayload) => {
 		const created = await $fetch<{ id: string; editToken?: string | null }>(
 			`/api/polls/${slug.value}/vote`,
-			{ method: 'POST', body },
+			{ method: 'POST', body, headers: credentials.value },
 		);
 		if (created.editToken) {
 			ownEntry.value = {
@@ -236,9 +284,12 @@
 		await $fetch(`/api/polls/${slug.value}/participants/${participantId}`, {
 			method: 'PUT',
 			body,
-			headers: own
-				? { [EDIT_TOKEN_HEADER]: ownEntry.value!.editToken }
-				: undefined,
+			headers: {
+				...credentials.value,
+				...(own
+					? { [EDIT_TOKEN_HEADER]: ownEntry.value!.editToken }
+					: {}),
+			},
 		});
 		toast.add({
 			title: own
@@ -340,6 +391,13 @@
 			]"
 		/>
 
+		<PollPasswordPrompt
+			v-else-if="needsPassword"
+			:wrong="wrongPassword"
+			:pending="unlocking"
+			@submit="unlock"
+		/>
+
 		<UEmpty
 			v-else-if="error || !poll"
 			icon="i-lucide-cloud-off"
@@ -356,21 +414,44 @@
 		/>
 
 		<template v-else>
-			<PollSummary
-				:title="poll.title"
-				:description="poll.description"
-				:slot-count="poll.slots.length"
-				:closed-at="poll.closedAt"
+			<PollSummary :title="poll.title" :description="poll.description" />
+
+			<UAlert
+				v-if="chosenSlot"
+				data-poll-chosen
+				icon="i-lucide-calendar-check"
+				color="success"
+				variant="subtle"
+				:title="`Créneau retenu : ${formatSlotLabel(chosenSlot)}`"
+				description="L’organisateur a fait son choix, les votes sont fermés."
 			/>
 
 			<UAlert
-				v-if="isClosed"
+				v-else-if="isClosed"
 				data-poll-closed
 				icon="i-lucide-lock"
 				color="neutral"
 				variant="subtle"
 				title="Ce Creno est fermé"
 				:description="`Les votes ont pris fin le ${formatFullDate(new Date(poll.closedAt))}. Voici les réponses reçues.`"
+			/>
+
+			<UAlert
+				v-if="poll.resultsHidden"
+				data-results-hidden
+				icon="i-lucide-eye-off"
+				color="neutral"
+				variant="subtle"
+				:title="
+					isClosed
+						? 'Les réponses des participants sont masquées'
+						: 'Les réponses des autres apparaîtront après la vôtre'
+				"
+				:description="
+					isClosed
+						? 'Seuls ceux qui ont répondu peuvent les voir.'
+						: 'Répondez sans être influencé par les choix des autres.'
+				"
 			/>
 
 			<UForm

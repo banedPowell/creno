@@ -1,5 +1,12 @@
 <script setup lang="ts">
-	defineProps<{ url: string }>();
+	import { useWebHaptics } from 'web-haptics/vue';
+	import { renderSVG } from 'uqr';
+
+	const props = defineProps<{ url: string }>();
+
+	const haptic = useWebHaptics();
+	const { sizeMd } = useResponsiveButtonSize();
+	const qrCode = computed(() => renderSVG(props.url, { pixelSize: 6 }));
 </script>
 
 <template>
@@ -9,12 +16,7 @@
 				Ton lien admin
 			</h2>
 			<p class="text-muted text-sm">
-				Il te permet de retrouver ce Creno depuis n’importe quel
-				appareil.
-				<br />
-				<span class="text-warning font-medium">
-					Garde-le pour toi : il donne accès à la gestion du Creno.
-				</span>
+				Garde-le pour toi : il donne accès à la gestion du Creno.
 			</p>
 		</div>
 
@@ -26,6 +28,30 @@
 					aria-hidden="true"
 				/>
 			</template>
+			<UPopover>
+				<UButton
+					icon="i-lucide-qr-code"
+					aria-label="QR code du lien admin"
+					color="neutral"
+					variant="ghost"
+					:size="sizeMd"
+					class="text-muted hover:bg-accented"
+					@click="haptic.trigger('light')"
+				>
+					<span class="hidden sm:inline">QR code</span>
+				</UButton>
+
+				<template #content>
+					<!-- eslint-disable vue/no-v-html -->
+					<div
+						class="rounded-xl bg-white p-3 [&_svg]:size-40 sm:[&_svg]:size-48"
+						role="img"
+						aria-label="QR code du lien admin"
+						v-html="qrCode"
+					/>
+					<!-- eslint-enable vue/no-v-html -->
+				</template>
+			</UPopover>
 		</CopyField>
 	</section>
 </template>

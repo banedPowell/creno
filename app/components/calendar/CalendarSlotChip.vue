@@ -9,7 +9,13 @@
 		continuesAfter?: boolean;
 	}>();
 
-	const { slotActions, now } = useCalendarContext();
+	const { slotActions, now, vote } = useCalendarContext();
+	const look = vote ? useSlotVote(() => props.timeSlot) : null;
+
+	const onClick = () => {
+		if (vote?.picking) vote.picking.select(props.timeSlot.id);
+		else slotActions.removeSlot(props.timeSlot.id);
+	};
 
 	const isPast = computed(
 		() => !props.ghost && isSlotPast(props.timeSlot, now.value),
@@ -26,6 +32,9 @@
 	<button
 		type="button"
 		data-calendar-slot
+		:data-best="look?.isBest.value || undefined"
+		:data-chosen="look?.isChosen.value || undefined"
+		:data-selected="look?.isSelected.value || undefined"
 		class="group flex h-5 min-w-0 items-center gap-1.5 rounded-md px-1.5 text-left text-xs transition-colors select-none focus-visible:outline-2"
 		:class="[
 			ghost
@@ -37,9 +46,13 @@
 			continuesAfter && 'rounded-r-none',
 			isPast && 'ring-error opacity-60 ring ring-inset',
 		]"
-		:aria-label="`Créneau ${label}${isPast ? ', déjà passé' : ''}, cliquer pour supprimer`"
+		:aria-label="
+			look
+				? look.describe(label)
+				: `Créneau ${label}${isPast ? ', déjà passé' : ''}, cliquer pour supprimer`
+		"
 		:data-past="isPast || undefined"
-		@click.stop="slotActions.removeSlot(timeSlot.id)"
+		@click.stop="onClick"
 	>
 		<span
 			v-if="!timeSlot.allDay"

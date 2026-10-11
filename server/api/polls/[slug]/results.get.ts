@@ -1,3 +1,5 @@
+import { EDIT_TOKEN_HEADER } from '../../../../shared/utils/votePayload';
+
 export default defineEventHandler(async (event) => {
 	const slug = getRouterParam(event, 'slug');
 
@@ -8,8 +10,21 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const { adminToken: _adminToken, ...poll } = await requirePollBySlug(slug);
+	const poll = await requirePollBySlug(slug);
+	requirePollAccess(event, poll);
 	const results = await getPollResults(poll.id);
 
-	return { ...poll, ...results };
+	const resultsHidden =
+		!!poll.hideResults &&
+		!isPollAdmin(event, poll) &&
+		!(await hasParticipantToken(
+			poll.id,
+			getHeader(event, EDIT_TOKEN_HEADER),
+		));
+
+	return {
+		...toPublicPoll(poll),
+		...(resultsHidden ? hidePollResults(results) : results),
+		resultsHidden,
+	};
 });

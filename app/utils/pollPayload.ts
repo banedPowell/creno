@@ -2,28 +2,16 @@ import { z } from 'zod';
 import type { CalendarTimeSlot } from '~/types/calendar';
 import { isoDate } from '~/utils/calendarDates';
 import { calendarSlotToApiSlot } from '~/utils/calendarSlot';
-
-export const TITLE_MAX_LENGTH = 120;
-export const DESCRIPTION_MAX_LENGTH = 1000;
-export const MAX_SLOTS = 100;
-export const MIN_SLOT_DURATION_MINUTES = 15;
+import {
+	MAX_SLOTS,
+	MIN_SLOT_DURATION_MINUTES,
+	pollDescriptionSchema,
+	pollTitleSchema,
+} from '#shared/utils/pollSettings';
 
 export const pollPayloadSchema = z.object({
-	title: z
-		.string()
-		.trim()
-		.min(2, 'Ajoutez un titre (2 caractères minimum)')
-		.max(
-			TITLE_MAX_LENGTH,
-			`Le titre ne doit pas dépasser ${TITLE_MAX_LENGTH} caractères`,
-		),
-	description: z
-		.string()
-		.trim()
-		.max(
-			DESCRIPTION_MAX_LENGTH,
-			`La description ne doit pas dépasser ${DESCRIPTION_MAX_LENGTH} caractères`,
-		)
+	title: pollTitleSchema,
+	description: pollDescriptionSchema
 		.optional()
 		.transform((value) => value || undefined),
 	closedAt: z.iso.datetime(),

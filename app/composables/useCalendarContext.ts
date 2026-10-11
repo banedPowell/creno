@@ -78,7 +78,11 @@ const [useProvideCalendarContext, useInjectCalendarContext] =
 				slots,
 				calendar,
 				slotActions,
-				draft: vote ? { ...draft, onGridPointerdown: () => {} } : draft,
+				// Picking a slot to keep still lets the organiser draw and move slots
+				draft:
+					vote && !vote.picking
+						? { ...draft, onGridPointerdown: () => {} }
+						: draft,
 				now,
 				vote,
 				highlightedSlotId,

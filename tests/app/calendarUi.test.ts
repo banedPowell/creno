@@ -50,6 +50,9 @@ const mountCalendar = async (initial: CalendarTimeSlot[] = []) => {
 				default: () =>
 					h(PollCalendar, {
 						modelValue: slots.value,
+						// These cases describe a 15-minute grid; the poll pages
+						// default to 30 and cover that themselves
+						snapMinutes: 15,
 						'onUpdate:modelValue': (value: CalendarTimeSlot[]) => {
 							slots.value = value;
 						},

@@ -5,7 +5,7 @@
 	"scripts": {
 		"build": "nuxt build",
 		"dev": "nuxt dev",
-		"dev:fullstack": "pnpm i && pnpm approve-builds && pnpm drizzle:generate && pnpm drizzle:migrate && pnpm nuxt dev --dotenv .env --https --host",
+		"dev:fullstack": "pnpm i && pnpm approve-builds && pnpm drizzle:generate && pnpm drizzle:migrate && pnpm nuxt dev --dotenv .env --host",
 		"drizzle:studio": "drizzle-kit studio",
 		"drizzle:generate": "drizzle-kit generate",
 		"drizzle:migrate": "drizzle-kit migrate",

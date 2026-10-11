@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import type { CalendarTimeSlot } from '../../app/types/calendar';
 import {
-	MAX_SLOTS,
 	buildPollPayload,
 	type PollPayloadInput,
 	type PollPayloadResult,
 } from '../../app/utils/pollPayload';
+import { MAX_SLOTS } from '../../shared/utils/pollSettings';
 
 // Friday 9 October 2026, 21:37 in Paris
 const NOW = new Date(2026, 9, 9, 21, 37);

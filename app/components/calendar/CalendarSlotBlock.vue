@@ -5,9 +5,12 @@
 		positioned: PositionedSlot;
 	}>();
 
-	const { config, slotActions, now } = useCalendarContext();
+	const { config, slotActions, now, vote } = useCalendarContext();
 
 	const slot = computed(() => props.positioned.slot);
+	// Only the organiser's calendar has both: answers on the block, and edits
+	const look = vote ? useSlotVote(slot) : null;
+	const picking = computed(() => !!vote?.picking);
 
 	// It started while the page was open, it can no longer be sent
 	const isPast = computed(() => isSlotPast(slot.value, now.value));
@@ -63,22 +66,33 @@
 
 	const onClick = () => {
 		if (suppressed.value) return;
-		slotActions.removeSlot(slot.value.id);
+		if (vote?.picking) vote.picking.select(slot.value.id);
+		else slotActions.removeSlot(slot.value.id);
 	};
+
+	const remove = () => slotActions.removeSlot(slot.value.id);
 </script>
 
 <template>
 	<button
 		type="button"
 		data-calendar-slot
+		:data-best="look?.isBest.value || undefined"
+		:data-chosen="look?.isChosen.value || undefined"
+		:data-selected="look?.isSelected.value || undefined"
 		class="group bg-elevated hover:bg-accented absolute flex touch-none overflow-hidden rounded-md text-left text-xs ring transition-colors select-none focus-visible:outline-2 focus-visible:outline-offset-1"
 		:class="[
 			dragging ? 'z-20 cursor-grabbing shadow-lg' : 'z-5 cursor-pointer',
 			compact ? 'items-center' : 'flex-col',
+			look?.isSelected.value && 'outline-primary z-10 outline-2',
 			isPast ? 'ring-error opacity-60' : 'ring-accented',
 		]"
 		:style="style"
-		:aria-label="`Créneau ${times}${isPast ? ', déjà passé' : ''}, cliquer pour supprimer`"
+		:aria-label="
+			look
+				? look.describe(times)
+				: `Créneau ${times}${isPast ? ', déjà passé' : ''}, cliquer pour supprimer`
+		"
 		:data-past="isPast || undefined"
 		@click.stop="onClick"
 		@pointerdown="onPointerdown"
@@ -86,7 +100,16 @@
 		@pointerup="onPointerup"
 		@pointercancel="onPointercancel"
 	>
-		<span class="bg-primary absolute inset-y-1 left-1 w-1 rounded-full" />
+		<span
+			class="absolute inset-y-1 left-1 w-1 rounded-full"
+			:class="
+				look?.isChosen.value
+					? 'bg-success'
+					: look?.isBest.value
+						? 'bg-primary'
+						: 'bg-primary'
+			"
+		/>
 
 		<!-- Next to another slot the block gets narrow, the end time drops to
 			its own line instead of being cut off -->
@@ -116,8 +139,19 @@
 			</span>
 		</span>
 
+		<button
+			v-if="picking && !dragging && !compact"
+			type="button"
+			data-remove-slot
+			aria-label="Retirer ce créneau"
+			class="text-muted hover:bg-accented absolute top-1 right-1 rounded p-0.5"
+			@click.stop="remove"
+			@pointerdown.stop
+		>
+			<UIcon name="i-lucide-x" class="size-3.5" />
+		</button>
 		<UIcon
-			v-if="!dragging && !compact"
+			v-else-if="!dragging && !compact"
 			name="i-lucide-x"
 			class="text-muted absolute top-1 right-1 size-3.5 opacity-0 transition-opacity group-hover:opacity-100"
 		/>

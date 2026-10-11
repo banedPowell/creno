@@ -15,6 +15,8 @@
 		yes,
 		maybe,
 		isBest,
+		isChosen,
+		isSelected,
 		isPast,
 		isDimmed,
 		disabled,
@@ -56,8 +58,12 @@
 			data-calendar-slot
 			:data-vote="status"
 			:data-best="isBest || undefined"
+			:data-chosen="isChosen || undefined"
+			:data-selected="isSelected || undefined"
+			:aria-pressed="isSelected || undefined"
 			class="flex h-5 min-w-0 items-center gap-1.5 rounded-md px-1.5 text-left text-xs transition select-none focus-visible:outline-2"
 			:class="[
+				isSelected && 'outline-primary outline-2',
 				faded
 					? 'bg-muted text-default'
 					: status === 'yes'
@@ -88,18 +94,26 @@
 			<span
 				class="size-1.5 shrink-0 rounded-full"
 				:class="
-					isBest
-						? 'bg-primary'
-						: status === 'yes'
-							? 'bg-success'
-							: status === 'maybe'
-								? 'bg-warning'
-								: 'bg-accented'
+					isChosen
+						? 'bg-success'
+						: isBest
+							? 'bg-primary'
+							: status === 'yes'
+								? 'bg-success'
+								: status === 'maybe'
+									? 'bg-warning'
+									: 'bg-accented'
 				"
 			/>
 			<span class="truncate font-medium tabular-nums">{{ label }}</span>
 			<UIcon
-				v-if="isBest"
+				v-if="isChosen"
+				data-chosen-badge
+				name="i-lucide-calendar-check"
+				class="text-success size-3 shrink-0"
+			/>
+			<UIcon
+				v-else-if="isBest"
 				name="i-lucide-star"
 				class="text-primary size-3 shrink-0"
 			/>

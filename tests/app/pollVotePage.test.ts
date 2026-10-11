@@ -454,7 +454,7 @@ describe('Vote page: open policy', () => {
 		const [url, options] = writes()[0]!;
 		expect(url).toBe('/api/polls/open/participants/p1');
 		expect(options.method).toBe('PUT');
-		expect(options.headers).toBeUndefined();
+		expect(options.headers).toEqual({});
 	});
 
 	it('goes back to a new answer on cancel', async () => {

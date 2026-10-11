@@ -30,7 +30,14 @@ export const useSlotVote = (slot: MaybeRefOrGetter<CalendarTimeSlot>) => {
 	);
 	const isBest = computed(() => vote.bestSlotIds.value.includes(id.value));
 	const isPast = computed(() => isSlotPast(toValue(slot), now.value));
-	const disabled = computed(() => vote.readonly.value || isPast.value);
+	const isChosen = computed(() => vote.chosenSlotId?.value === id.value);
+	const isSelected = computed(
+		() => vote.picking?.selectedId.value === id.value,
+	);
+	// Picking works on any slot, even a past one: the meeting may be over
+	const disabled = computed(() =>
+		vote.picking ? false : vote.readonly.value || isPast.value,
+	);
 
 	// A participant picked in the list: the slots they left out step back
 	const isDimmed = computed(() => {
@@ -52,13 +59,19 @@ export const useSlotVote = (slot: MaybeRefOrGetter<CalendarTimeSlot>) => {
 
 	const describe = (label: string) => {
 		const parts = [`Créneau ${label}`];
-		if (!vote.readonly.value) parts.push(STATUS_LABELS[status.value]);
+		if (!vote.readonly.value && !vote.picking)
+			parts.push(STATUS_LABELS[status.value]);
+		if (isChosen.value) parts.push('retenu');
 		if (isBest.value) parts.push('le plus demandé');
 		parts.push(
 			`${yes.value.length} présent${yes.value.length > 1 ? 's' : ''}`,
 		);
 		parts.push(`${maybe.value.length} peut-être`);
 		if (isPast.value) parts.push('déjà passé');
+		if (vote.picking)
+			parts.push(
+				isSelected.value ? 'sélectionné' : 'cliquer pour sélectionner',
+			);
 		else if (!disabled.value)
 			parts.push(
 				`cliquer pour ${STATUS_LABELS[NEXT_STATUS[status.value]]}`,
@@ -67,7 +80,8 @@ export const useSlotVote = (slot: MaybeRefOrGetter<CalendarTimeSlot>) => {
 	};
 
 	const toggle = () => {
-		if (!disabled.value) vote.cycleVote(id.value);
+		if (vote.picking) vote.picking.select(id.value);
+		else if (!disabled.value) vote.cycleVote(id.value);
 	};
 
 	return {
@@ -75,6 +89,8 @@ export const useSlotVote = (slot: MaybeRefOrGetter<CalendarTimeSlot>) => {
 		yes,
 		maybe,
 		isBest,
+		isChosen,
+		isSelected,
 		isPast,
 		isDimmed,
 		disabled,
