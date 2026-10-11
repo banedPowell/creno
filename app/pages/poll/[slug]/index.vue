@@ -72,7 +72,8 @@
 	const isClosed = computed(
 		() =>
 			closedByServer.value ||
-			(!!poll.value && new Date(poll.value.closedAt) <= now.value),
+			(!!poll.value &&
+				new Date(poll.value.closedAt).getTime() <= Date.now()),
 	);
 
 	// Anyone may change anyone's answer, instead of only their own
@@ -437,21 +438,13 @@
 			/>
 
 			<UAlert
-				v-if="poll.resultsHidden"
+				v-if="poll.resultsHidden && !isClosed"
 				data-results-hidden
 				icon="i-lucide-eye-off"
 				color="neutral"
 				variant="subtle"
-				:title="
-					isClosed
-						? 'Les réponses des participants sont masquées'
-						: 'Les réponses des autres apparaîtront après la vôtre'
-				"
-				:description="
-					isClosed
-						? 'Seuls ceux qui ont répondu peuvent les voir.'
-						: 'Répondez sans être influencé par les choix des autres.'
-				"
+				title="Les réponses des autres apparaîtront après la vôtre"
+				description="Répondez sans être influencé par les choix des autres."
 			/>
 
 			<UForm

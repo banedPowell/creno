@@ -59,6 +59,12 @@
 			class="bg-primary size-1.5 shrink-0 rounded-full"
 		/>
 		<span class="truncate font-medium tabular-nums">{{ label }}</span>
+		<span
+			v-if="look && (look.yes.value.length || look.maybe.value.length)"
+			class="text-muted shrink-0 text-[10px] tabular-nums"
+		>
+			{{ look.yes.value.length + look.maybe.value.length }}
+		</span>
 		<UIcon
 			v-if="!ghost"
 			name="i-lucide-x"

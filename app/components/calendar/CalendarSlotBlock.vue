@@ -85,7 +85,8 @@
 			dragging ? 'z-20 cursor-grabbing shadow-lg' : 'z-5 cursor-pointer',
 			compact ? 'items-center' : 'flex-col',
 			look?.isSelected.value && 'outline-primary z-10 outline-2',
-			isPast ? 'ring-error opacity-60' : 'ring-accented',
+			isPast || look?.isDimmed.value ? 'opacity-60' : '',
+			isPast ? 'ring-error' : 'ring-accented',
 		]"
 		:style="style"
 		:aria-label="
@@ -155,6 +156,38 @@
 			name="i-lucide-x"
 			class="text-muted absolute top-1 right-1 size-3.5 opacity-0 transition-opacity group-hover:opacity-100"
 		/>
+
+		<UTooltip
+			v-if="look && (look.yes.value.length || look.maybe.value.length)"
+			:delay-duration="300"
+			:ui="{ content: 'h-auto py-1.5' }"
+		>
+			<template #content>
+				<span class="text-xs whitespace-pre-line">{{
+					look.tooltip.value
+				}}</span>
+			</template>
+			<span
+				v-if="!compact"
+				data-vote-tally
+				class="text-muted pointer-events-auto absolute bottom-1 left-3.5 flex items-center gap-2 text-[11px] tabular-nums"
+			>
+				<span
+					v-if="look.yes.value.length"
+					class="flex items-center gap-0.5"
+				>
+					<UIcon name="i-lucide-check" class="size-3" />
+					{{ look.yes.value.length }}
+				</span>
+				<span
+					v-if="look.maybe.value.length"
+					class="flex items-center gap-0.5"
+				>
+					<UIcon name="i-lucide-circle-help" class="size-3" />
+					{{ look.maybe.value.length }}
+				</span>
+			</span>
+		</UTooltip>
 
 		<span
 			data-resize-handle="top"

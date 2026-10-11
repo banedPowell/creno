@@ -14,8 +14,14 @@ export default defineEventHandler(async (event) => {
 	requirePollAccess(event, poll);
 	const results = await getPollResults(poll.id);
 
+	const ended =
+		!!poll.chosenSlotId ||
+		(!!poll.closedAt && new Date(poll.closedAt).getTime() <= Date.now());
+	const stillOpen = !ended;
+	// Hidden answers open up once voting is over, and always for the organiser
 	const resultsHidden =
 		!!poll.hideResults &&
+		stillOpen &&
 		!isPollAdmin(event, poll) &&
 		!(await hasParticipantToken(
 			poll.id,

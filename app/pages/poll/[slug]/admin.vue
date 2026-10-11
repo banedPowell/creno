@@ -63,9 +63,6 @@
 	});
 
 	const now = useNow({ interval: 60_000 });
-	const isClosed = computed(
-		() => !!poll.value && new Date(poll.value.closedAt) <= now.value,
-	);
 
 	const savedSlots = computed(
 		() => poll.value?.slots.map(apiSlotToCalendarSlot) ?? [],
@@ -82,6 +79,14 @@
 	const draft = ref<CalendarTimeSlot[]>([]);
 	// Armed from the status card, sent with the bar’s Enregistrer
 	const intent = ref<null | 'close' | 'unchoose'>(null);
+	// A fresh clock: the calendar line only moves once a minute, and closing
+	// sets the end to this very moment
+	const isClosed = computed(
+		() =>
+			intent.value === 'close' ||
+			(!!poll.value &&
+				new Date(poll.value.closedAt).getTime() <= Date.now()),
+	);
 
 	const toCalendarDate = (value: string | Date) => {
 		const date = new Date(value);
@@ -521,7 +526,7 @@
 
 				<PollAdminStatus
 					:closed="isClosed"
-					:closed-at="poll.closedAt"
+					:closed-at="intent === 'close' ? new Date() : poll.closedAt"
 					:chosen-label="chosenSlot ? slotLabel(chosenSlot) : null"
 					:pending="pending === 'settings'"
 					@close="arm('close')"
@@ -542,8 +547,9 @@
 						Cliquez un créneau pour le retenir. Déplacez-le pour
 						garder ses réponses, la croix le retire.
 						<template v-if="poll.hideResults">
-							Les participants ne voient les réponses qu’après
-							avoir répondu.
+							Vous voyez déjà les réponses. Les participants ne
+							les voient qu’après avoir répondu, ou une fois le
+							sondage terminé.
 						</template>
 					</p>
 

@@ -237,9 +237,8 @@ describe('Creator page: running the poll', () => {
 
 		const best = wrapper!.find('[data-calendar-slot][data-best]');
 		expect(best.attributes('aria-label')).toContain('1 présent');
-		expect(wrapper!.text()).toContain(
-			'Les participants ne voient les réponses qu’après avoir répondu',
-		);
+		expect(wrapper!.find('[data-vote-tally]').text()).toContain('1');
+		expect(wrapper!.text()).toContain('Vous voyez déjà les réponses');
 	});
 
 	it('closes the votes now', async () => {
@@ -247,6 +246,10 @@ describe('Creator page: running the poll', () => {
 		await loaded();
 
 		await wrapper!.find('[data-close]').trigger('click');
+		expect(wrapper!.find('[data-status-title]').text()).toBe(
+			'Les votes sont fermés',
+		);
+		expect(wrapper!.find('[data-reopen]').exists()).toBe(true);
 		await wrapper!.find('[data-admin-save]').trigger('click');
 		await vi.waitFor(() => expect(writes()).toHaveLength(1));
 

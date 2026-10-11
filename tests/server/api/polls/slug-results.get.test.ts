@@ -116,6 +116,37 @@ describe('GET /api/polls/[slug]/results', () => {
 			expect(result.slots[0].yesCount).toBe(1);
 		});
 
+		it('les montre à tout le monde une fois le sondage terminé', async () => {
+			vi.mocked(requirePollBySlug).mockResolvedValue({
+				id: 'poll-1',
+				adminToken: 'admin-token',
+				hideResults: true,
+				closedAt: '2020-01-01T00:00:00.000Z',
+			});
+			vi.mocked(hasParticipantToken).mockResolvedValue(false);
+
+			const result = await (await loadHandler())(mockEvent);
+
+			expect(result.resultsHidden).toBe(false);
+			expect(result.slots[0].yesCount).toBe(1);
+		});
+
+		it('les montre à tout le monde quand un créneau est retenu', async () => {
+			vi.mocked(requirePollBySlug).mockResolvedValue({
+				id: 'poll-1',
+				adminToken: 'admin-token',
+				hideResults: true,
+				closedAt: '2099-01-01T00:00:00.000Z',
+				chosenSlotId: 's1',
+			});
+			vi.mocked(hasParticipantToken).mockResolvedValue(false);
+
+			const result = await (await loadHandler())(mockEvent);
+
+			expect(result.resultsHidden).toBe(false);
+			expect(result.slots[0].voters).toHaveLength(1);
+		});
+
 		it('les montre toujours à l’organisateur', async () => {
 			headers({ 'x-creno-admin': 'admin-token' });
 

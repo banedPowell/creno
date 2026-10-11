@@ -26,8 +26,8 @@
 					chosenLabel
 						? 'i-lucide-calendar-check'
 						: closed
-							? 'i-lucide-lock'
-							: 'i-lucide-circle-dot'
+							? 'i-lucide-calendar-x'
+							: 'i-lucide-calendar-clock'
 				"
 				class="mt-0.5 size-5 shrink-0"
 				:class="chosenLabel || !closed ? 'text-success' : 'text-muted'"
@@ -66,7 +66,7 @@
 				v-if="closed"
 				data-reopen
 				label="Rouvrir une semaine"
-				icon="i-lucide-lock-open"
+				icon="i-lucide-calendar-clock"
 				color="neutral"
 				variant="soft"
 				:loading="pending"
@@ -81,7 +81,7 @@
 				v-else
 				data-close
 				label="Clôturer maintenant"
-				icon="i-lucide-lock"
+				icon="i-lucide-calendar-x"
 				color="neutral"
 				variant="soft"
 				:loading="pending"
