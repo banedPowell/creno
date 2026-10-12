@@ -9,8 +9,14 @@
 		continuesAfter?: boolean;
 	}>();
 
-	const { slotActions, now, vote, calendar, highlightedSlotId, hoveredSlotId } =
-		useCalendarContext();
+	const {
+		slotActions,
+		now,
+		vote,
+		calendar,
+		highlightedSlotId,
+		hoveredSlotId,
+	} = useCalendarContext();
 	const look = vote ? useSlotVote(() => props.timeSlot) : null;
 	const faded = computed(
 		() => !!look && (look.isDimmed.value || look.isPast.value),
