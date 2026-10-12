@@ -237,7 +237,16 @@ describe('Creator page: running the poll', () => {
 
 		const best = wrapper!.find('[data-calendar-slot][data-best]');
 		expect(best.attributes('aria-label')).toContain('1 présent');
+		expect(best.find('[data-best-badge]').text()).toContain('Top');
 		expect(wrapper!.find('[data-vote-tally]').text()).toContain('1');
+		await wrapper!.find('[data-best-button]').trigger('click');
+		await vi.waitFor(() =>
+			expect(
+				wrapper!
+					.find('[data-calendar-slot][data-highlighted]')
+					.exists(),
+			).toBe(true),
+		);
 		expect(wrapper!.text()).toContain('Vous voyez déjà les réponses');
 	});
 

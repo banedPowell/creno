@@ -33,7 +33,18 @@
 
 	const count = computed(() => yes.value.length + maybe.value.length);
 
-	const { highlightedSlotId } = useCalendarContext();
+	const { calendar, highlightedSlotId, hoveredSlotId } = useCalendarContext();
+	const spanned = computed(
+		() =>
+			calendar.view.value === 'month' &&
+			!!props.timeSlot.allDay &&
+			(props.timeSlot.startDate !== props.timeSlot.endDate ||
+				!!props.continuesBefore ||
+				!!props.continuesAfter),
+	);
+	const linked = computed(
+		() => spanned.value && hoveredSlotId.value === props.timeSlot.id,
+	);
 
 	// Dimmed but solid, like the timed blocks
 	const faded = computed(() => isDimmed.value || isPast.value);
@@ -80,6 +91,8 @@
 						: status === 'yes'
 							? 'hover:bg-vote-yes-hover cursor-pointer'
 							: 'hover:bg-vote-maybe-hover cursor-pointer',
+				spanned && 'ring-primary/20 ring-1 ring-inset',
+				linked && '!bg-elevated',
 				continuesBefore && 'rounded-l-none',
 				continuesAfter && 'rounded-r-none',
 				faded && '[&>*]:opacity-50',
@@ -90,6 +103,10 @@
 			:aria-label="describe(label)"
 			:aria-disabled="disabled || undefined"
 			@click.stop="onClick"
+			@pointerenter="hoveredSlotId = timeSlot.id"
+			@pointerleave="
+				hoveredSlotId === timeSlot.id && (hoveredSlotId = null)
+			"
 		>
 			<span
 				class="size-1.5 shrink-0 rounded-full"
