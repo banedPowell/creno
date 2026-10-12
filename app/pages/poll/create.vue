@@ -116,89 +116,101 @@
 </script>
 
 <template>
-	<UContainer class="mt-8 max-w-5xl pb-28 md:mt-12">
-		<h1 class="sr-only">Lancer un Creno</h1>
+	<UForm :state="state" :validate="validate" @submit="onSubmit">
+		<UPage>
+			<template #left>
+				<UPageAside>
+					<div class="flex flex-col gap-6">
+						<UFormField name="closedAt">
+							<PollClosingField
+								v-model="date"
+								:min-date="minDate"
+							/>
+						</UFormField>
 
-		<UForm
-			:state="state"
-			:validate="validate"
-			class="space-y-6"
-			@submit="onSubmit"
-		>
-			<div>
-				<UFormField name="title">
-					<UInput
-						v-model="state.title"
-						variant="none"
-						size="xl"
-						aria-label="Titre du Creno"
-						placeholder="Réunion d'équipe"
-						class="w-full"
-						:ui="{
-							base: 'text-highlighted placeholder:text-dimmed px-0 text-3xl font-bold aria-invalid:rounded-none aria-invalid:border-b-2 aria-invalid:border-error aria-invalid:ring-0 md:text-4xl',
-						}"
-					/>
-				</UFormField>
+						<PollGridSettings
+							v-model:snap-minutes="snapMinutes"
+							v-model:click-slot-duration="clickSlotDuration"
+						/>
 
-				<UFormField name="description">
-					<UTextarea
-						v-model="state.description"
-						variant="none"
-						autoresize
-						:rows="1"
-						aria-label="Description du Creno"
-						placeholder="Ajoutez une description (facultatif)"
-						class="w-full"
-						:ui="{
-							base: 'text-muted placeholder:text-dimmed resize-none px-0 text-base aria-invalid:rounded-none aria-invalid:border-b-2 aria-invalid:border-error aria-invalid:ring-0',
-						}"
-					/>
-				</UFormField>
-			</div>
+						<PollAdvancedOptions
+							v-model="options"
+							v-model:snap-minutes="snapMinutes"
+							v-model:click-slot-duration="clickSlotDuration"
+							:show-grid="false"
+						/>
+					</div>
+				</UPageAside>
+			</template>
 
-			<UFormField name="closedAt">
-				<PollClosingField v-model="date" :min-date="minDate" />
-			</UFormField>
+			<UPageBody>
+				<h1 class="sr-only">Lancer un Creno</h1>
 
-			<UFormField name="slots">
-				<PollCalendar
-					v-model="calendarSlots"
-					:snap-minutes="snapMinutes"
-					:click-slot-duration="clickSlotDuration"
-				/>
-			</UFormField>
+				<div>
+					<UFormField name="title">
+						<UInput
+							v-model="state.title"
+							variant="none"
+							size="xl"
+							aria-label="Titre du Creno"
+							placeholder="Réunion d'équipe"
+							class="w-full"
+							:ui="{
+								base: 'text-highlighted placeholder:text-dimmed px-0 text-3xl font-bold aria-invalid:rounded-none aria-invalid:border-b-2 aria-invalid:border-error aria-invalid:ring-0 md:text-4xl',
+							}"
+						/>
+					</UFormField>
 
-			<PollAdvancedOptions
-				v-model="options"
-				v-model:snap-minutes="snapMinutes"
-				v-model:click-slot-duration="clickSlotDuration"
-			/>
-
-			<div class="sticky bottom-4 z-40">
-				<div
-					class="bg-elevated/85 ring-default flex flex-col gap-1.5 rounded-xl p-1.5 shadow-lg ring backdrop-blur sm:flex-row sm:items-center sm:justify-between"
-				>
-					<p
-						class="bg-default rounded-lg px-3 py-1.5 text-sm tabular-nums"
-						:class="isValid ? 'text-highlighted' : 'text-muted'"
-					>
-						{{ summary }}
-					</p>
-
-					<UButton
-						type="submit"
-						label="Lancer le Creno"
-						trailing-icon="i-lucide-arrow-right"
-						color="neutral"
-						variant="solid"
-						:size="sizeXl"
-						:loading="pending"
-						:disabled="pending || !isValid"
-						class="press w-full justify-center sm:w-fit"
-						@click="haptic.trigger('medium')"
-					/>
+					<UFormField name="description">
+						<UTextarea
+							v-model="state.description"
+							variant="none"
+							autoresize
+							:rows="1"
+							aria-label="Description du Creno"
+							placeholder="Ajoutez une description (facultatif)"
+							class="w-full"
+							:ui="{
+								base: 'text-muted placeholder:text-dimmed resize-none px-0 text-base aria-invalid:rounded-none aria-invalid:border-b-2 aria-invalid:border-error aria-invalid:ring-0',
+							}"
+						/>
+					</UFormField>
 				</div>
-			</div>
-		</UForm>
-	</UContainer>
+
+				<UFormField name="slots">
+					<PollCalendar
+						v-model="calendarSlots"
+						:snap-minutes="snapMinutes"
+						:click-slot-duration="clickSlotDuration"
+					/>
+				</UFormField>
+
+				<div class="sticky bottom-4 z-40">
+					<div
+						class="bg-elevated/85 ring-default flex flex-col gap-1.5 rounded-xl p-1.5 shadow-lg ring backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+					>
+						<p
+							class="bg-default rounded-lg px-3 py-1.5 text-sm tabular-nums"
+							:class="isValid ? 'text-highlighted' : 'text-muted'"
+						>
+							{{ summary }}
+						</p>
+
+						<UButton
+							type="submit"
+							label="Lancer le Creno"
+							trailing-icon="i-lucide-arrow-right"
+							color="neutral"
+							variant="solid"
+							:size="sizeXl"
+							:loading="pending"
+							:disabled="pending || !isValid"
+							class="press w-full justify-center sm:w-fit"
+							@click="haptic.trigger('medium')"
+						/>
+					</div>
+				</div>
+			</UPageBody>
+		</UPage>
+	</UForm>
 </template>
