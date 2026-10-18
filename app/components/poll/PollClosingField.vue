@@ -29,6 +29,14 @@
 	const isPresetActive = (duration: DateDuration) =>
 		date.value.compare(props.minDate.add(duration)) === 0;
 
+	const asDate = computed(
+		() => new Date(date.value.year, date.value.month - 1, date.value.day),
+	);
+
+	const shortDateLabel = computed(
+		() => `${formatDayMonth(asDate.value)} ${date.value.year}`,
+	);
+
 	const closingHint = computed(() => {
 		const days = date.value.compare(props.minDate);
 		const relative =
@@ -37,25 +45,65 @@
 				: days === 1
 					? 'demain'
 					: `dans ${days} jours`;
-		return `Les votes ferment le ${formatFullDate(new Date(date.value.year, date.value.month - 1, date.value.day))}, ${relative}.`;
+		return `Les votes ferment le ${formatFullDate(asDate.value)}, ${relative}.`;
 	});
 </script>
 
 <template>
-	<div class="flex flex-wrap items-center gap-3">
-		<span class="text-muted text-sm">Clôture</span>
+	<div class="flex w-full flex-col gap-2">
+		<div class="flex items-center gap-1">
+			<span class="text-muted text-sm">Clôture</span>
+			<UTooltip
+				:text="closingHint"
+				:ui="{
+					content: 'h-auto max-w-56 items-start py-1.5',
+					text: 'overflow-visible whitespace-normal text-clip',
+				}"
+			>
+				<button
+					type="button"
+					class="text-muted hover:text-default"
+					aria-label="Détail de la clôture"
+				>
+					<UIcon name="i-lucide-circle-help" class="size-3.5" />
+				</button>
+			</UTooltip>
+		</div>
 
-		<div
-			class="bg-elevated flex w-fit flex-wrap items-center gap-2 rounded-xl p-1.5"
-		>
-			<div class="flex items-center gap-0.5">
+		<div class="bg-elevated flex w-full flex-col gap-1 rounded-xl p-1.5">
+			<UPopover>
+				<UButton
+					color="neutral"
+					variant="ghost"
+					trailing-icon="i-lucide-calendar"
+					:label="shortDateLabel"
+					:size="sizeMd"
+					class="hover:bg-accented w-full justify-between"
+					aria-label="Choisir une date"
+					data-details-closing
+					@click="haptic.trigger('light')"
+				/>
+
+				<template #content>
+					<UCalendar
+						v-model="date"
+						class="p-4"
+						:min-value="minDate"
+						variant="subtle"
+						:size="sizeXl"
+						@update:model-value="haptic.trigger('light')"
+					/>
+				</template>
+			</UPopover>
+
+			<div class="grid grid-cols-2 gap-0.5">
 				<UButton
 					icon="i-lucide-minus"
 					variant="ghost"
 					color="neutral"
 					:size="sizeMd"
 					:disabled="isAtMinDate"
-					class="hover:bg-accented"
+					class="hover:bg-accented w-full justify-center"
 					aria-label="Un jour plus tôt"
 					@click="
 						() => {
@@ -64,51 +112,12 @@
 						}
 					"
 				/>
-
-				<UTooltip :text="closingHint">
-					<UInputDate
-						v-model="date"
-						variant="none"
-						:size="sizeMd"
-						:hour-cycle="24"
-						:min-value="minDate"
-						class="bg-elevated rounded-lg"
-						data-details-closing
-					>
-						<template #trailing>
-							<UPopover>
-								<UButton
-									color="neutral"
-									variant="link"
-									icon="i-lucide-calendar"
-									aria-label="Choisir une date"
-									class="px-0"
-									@click="haptic.trigger('light')"
-								/>
-
-								<template #content>
-									<UCalendar
-										v-model="date"
-										class="p-4"
-										:min-value="minDate"
-										variant="subtle"
-										:size="sizeXl"
-										@update:model-value="
-											haptic.trigger('light')
-										"
-									/>
-								</template>
-							</UPopover>
-						</template>
-					</UInputDate>
-				</UTooltip>
-
 				<UButton
 					icon="i-lucide-plus"
 					variant="ghost"
 					color="neutral"
 					:size="sizeMd"
-					class="hover:bg-accented"
+					class="hover:bg-accented w-full justify-center"
 					aria-label="Un jour plus tard"
 					@click="
 						() => {
@@ -119,7 +128,7 @@
 				/>
 			</div>
 
-			<div class="flex items-center gap-0.5">
+			<div class="grid grid-cols-3">
 				<UButton
 					v-for="preset in closingPresets"
 					:key="preset.label"
@@ -129,6 +138,8 @@
 						isPresetActive(preset.duration) ? 'soft' : 'ghost'
 					"
 					:size="sizeMd"
+					class="w-full justify-center px-1"
+					:ui="{ label: 'truncate-none' }"
 					:class="
 						isPresetActive(preset.duration)
 							? 'bg-accented'
