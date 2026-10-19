@@ -10,6 +10,7 @@
 	} from '#shared/utils/pollSettings';
 
 	const haptic = useWebHaptics();
+	const sidebarOpen = ref(true);
 
 	const state = reactive({ title: '', description: '' });
 	const options = ref<PollOptions>({ ...DEFAULT_POLL_OPTIONS });
@@ -116,101 +117,118 @@
 </script>
 
 <template>
-	<UForm :state="state" :validate="validate" @submit="onSubmit">
-		<UPage>
-			<template #left>
-				<UPageAside>
-					<div class="flex flex-col gap-6">
-						<UFormField name="closedAt">
-							<PollClosingField
-								v-model="date"
-								:min-date="minDate"
-							/>
-						</UFormField>
+	<UForm
+		:state="state"
+		:validate="validate"
+		class="flex min-h-[calc(100svh-var(--ui-header-height))] min-w-0 flex-1"
+		@submit="onSubmit"
+	>
+		<USidebar
+			v-model:open="sidebarOpen"
+			collapsible="offcanvas"
+			mode="slideover"
+			:style="{ '--sidebar-width': '20rem' }"
+			:ui="{
+				gap: 'h-[calc(100%-var(--ui-header-height))]',
+				container:
+					'top-(--ui-header-height) h-[calc(100%-var(--ui-header-height))]',
+			}"
+		>
+			<div class="flex flex-col gap-6">
+				<UFormField name="closedAt">
+					<PollClosingField v-model="date" :min-date="minDate" />
+				</UFormField>
 
-						<PollGridSettings
-							v-model:snap-minutes="snapMinutes"
-							v-model:click-slot-duration="clickSlotDuration"
-						/>
+				<PollGridSettings
+					v-model:snap-minutes="snapMinutes"
+					v-model:click-slot-duration="clickSlotDuration"
+				/>
 
-						<PollAdvancedOptions
-							v-model="options"
-							v-model:snap-minutes="snapMinutes"
-							v-model:click-slot-duration="clickSlotDuration"
-							:show-grid="false"
-						/>
-					</div>
-				</UPageAside>
-			</template>
+				<PollAdvancedOptions
+					v-model="options"
+					v-model:snap-minutes="snapMinutes"
+					v-model:click-slot-duration="clickSlotDuration"
+					:show-grid="false"
+				/>
+			</div>
+		</USidebar>
 
-			<UPageBody>
-				<h1 class="sr-only">Lancer un Creno</h1>
+		<div class="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
+			<UButton
+				icon="i-lucide-panel-left"
+				color="neutral"
+				variant="ghost"
+				aria-label="Afficher les réglages"
+				class="w-fit lg:hidden"
+				@click="sidebarOpen = !sidebarOpen"
+			/>
 
-				<div>
-					<UFormField name="title">
-						<UInput
-							v-model="state.title"
-							variant="none"
-							size="xl"
-							aria-label="Titre du Creno"
-							placeholder="Réunion d'équipe"
-							class="w-full"
-							:ui="{
-								base: 'text-highlighted placeholder:text-dimmed px-0 text-3xl font-bold aria-invalid:rounded-none aria-invalid:border-b-2 aria-invalid:border-error aria-invalid:ring-0 md:text-4xl',
-							}"
-						/>
-					</UFormField>
+			<h1 class="sr-only">Lancer un Creno</h1>
 
-					<UFormField name="description">
-						<UTextarea
-							v-model="state.description"
-							variant="none"
-							autoresize
-							:rows="1"
-							aria-label="Description du Creno"
-							placeholder="Ajoutez une description (facultatif)"
-							class="w-full"
-							:ui="{
-								base: 'text-muted placeholder:text-dimmed resize-none px-0 text-base aria-invalid:rounded-none aria-invalid:border-b-2 aria-invalid:border-error aria-invalid:ring-0',
-							}"
-						/>
-					</UFormField>
-				</div>
-
-				<UFormField name="slots">
-					<PollCalendar
-						v-model="calendarSlots"
-						:snap-minutes="snapMinutes"
-						:click-slot-duration="clickSlotDuration"
+			<div>
+				<UFormField name="title">
+					<UInput
+						v-model="state.title"
+						variant="none"
+						size="xl"
+						aria-label="Titre du Creno"
+						placeholder="Réunion d'équipe"
+						class="w-full"
+						:ui="{
+							base: 'text-highlighted placeholder:text-dimmed px-0 text-3xl font-bold aria-invalid:rounded-none aria-invalid:border-b-2 aria-invalid:border-error aria-invalid:ring-0 md:text-4xl',
+						}"
 					/>
 				</UFormField>
 
-				<div class="sticky bottom-4 z-40">
-					<div
-						class="bg-elevated/85 ring-default flex flex-col gap-1.5 rounded-xl p-1.5 shadow-lg ring backdrop-blur sm:flex-row sm:items-center sm:justify-between"
-					>
-						<p
-							class="bg-default rounded-lg px-3 py-1.5 text-sm tabular-nums"
-							:class="isValid ? 'text-highlighted' : 'text-muted'"
-						>
-							{{ summary }}
-						</p>
+				<UFormField name="description">
+					<UTextarea
+						v-model="state.description"
+						variant="none"
+						autoresize
+						:rows="1"
+						aria-label="Description du Creno"
+						placeholder="Ajoutez une description (facultatif)"
+						class="w-full"
+						:ui="{
+							base: 'text-muted placeholder:text-dimmed resize-none px-0 text-base aria-invalid:rounded-none aria-invalid:border-b-2 aria-invalid:border-error aria-invalid:ring-0',
+						}"
+					/>
+				</UFormField>
+			</div>
 
-						<UButton
-							type="submit"
-							label="Lancer le Creno"
-							trailing-icon="i-lucide-arrow-right"
-							color="neutral"
-							variant="solid"
-							:size="sizeXl"
-							:loading="pending"
-							:disabled="pending || !isValid"
-							class="press w-full justify-center sm:w-fit"
-							@click="haptic.trigger('medium')"
-						/>
-					</div>
+			<UFormField name="slots">
+				<PollCalendar
+					v-model="calendarSlots"
+					:snap-minutes="snapMinutes"
+					:click-slot-duration="clickSlotDuration"
+				/>
+			</UFormField>
+
+			<div class="sticky bottom-4 z-40">
+				<div
+					class="bg-elevated/85 ring-default flex flex-col gap-1.5 rounded-xl p-1.5 shadow-lg ring backdrop-blur sm:flex-row sm:items-center sm:justify-between"
+				>
+					<p
+						class="bg-default rounded-lg px-3 py-1.5 text-sm tabular-nums"
+						:class="isValid ? 'text-highlighted' : 'text-muted'"
+					>
+						{{ summary }}
+					</p>
+
+					<UButton
+						type="submit"
+						label="Lancer le Creno"
+						trailing-icon="i-lucide-arrow-right"
+						color="neutral"
+						variant="solid"
+						:size="sizeXl"
+						:loading="pending"
+						:disabled="pending || !isValid"
+						class="press w-full justify-center sm:w-fit"
+						@click="haptic.trigger('medium')"
+					/>
 				</div>
-			</UPageBody>
-		</UPage>
+			</div>
+		</div>
 	</UForm>
 </template>
