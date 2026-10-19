@@ -19,24 +19,35 @@ export default defineAppConfig({
 				center: 'order-1 flex w-full min-w-0 max-w-5xl flex-col gap-6 lg:order-none',
 				right: 'order-3 w-full min-w-0 lg:sticky lg:top-20 lg:order-none',
 			},
-			variants: {
-				left: {
-					true: {
-						root: 'lg:max-w-[calc(20rem+64rem+2.5rem+4rem)] lg:grid-cols-[20rem_minmax(0,1fr)]',
-					},
-				},
-				right: {
-					true: {
-						root: 'lg:max-w-[calc(64rem+18rem+2.5rem+4rem)] lg:grid-cols-[minmax(0,1fr)_18rem]',
-					},
-				},
-			},
+			// The theme defines left/right as empty strings, which wipes an object
+			// variant on merge. Compounds are appended and keep their slot map.
 			compoundVariants: [
+				{
+					left: true,
+					right: false,
+					class: {
+						root: 'lg:max-w-[calc(20rem+64rem+2.5rem+4rem)] lg:grid-cols-[20rem_minmax(0,1fr)]!',
+						left: 'lg:col-span-1',
+						center: 'lg:col-span-1',
+					},
+				},
+				{
+					left: false,
+					right: true,
+					class: {
+						root: 'lg:max-w-[calc(64rem+18rem+2.5rem+4rem)] lg:grid-cols-[minmax(0,1fr)_18rem]!',
+						right: 'lg:col-span-1',
+						center: 'lg:col-span-1',
+					},
+				},
 				{
 					left: true,
 					right: true,
 					class: {
-						root: 'lg:max-w-[calc(20rem+64rem+18rem+5rem+4rem)] lg:grid-cols-[20rem_minmax(0,1fr)_18rem]',
+						root: 'lg:max-w-[calc(20rem+64rem+18rem+5rem+4rem)] lg:grid-cols-[20rem_minmax(0,1fr)_18rem]!',
+						left: 'lg:col-span-1',
+						center: 'lg:col-span-1',
+						right: 'lg:col-span-1',
 					},
 				},
 			],

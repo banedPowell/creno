@@ -8,7 +8,7 @@
 
 <template>
 	<section
-		class="ring-error/30 flex flex-col gap-3 rounded-xl p-4 ring sm:flex-row sm:items-center sm:justify-between"
+		class="ring-error/30 flex flex-col gap-3 rounded-xl p-4 ring"
 		aria-labelledby="delete-title"
 	>
 		<div>
