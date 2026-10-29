@@ -35,6 +35,7 @@
 		data: poll,
 		error,
 		refresh,
+		status,
 	} = await useFetch<PollResults>(() => `/api/polls/${slug.value}/results`, {
 		headers: credentials,
 		watch: false,
@@ -80,6 +81,15 @@
 		password,
 	);
 
+	// While the browser loads the poll with what only it holds. An unlock
+	// keeps the password prompt, which shows its own pending state
+	const loading = computed(
+		() =>
+			!poll.value &&
+			!unlocking.value &&
+			(status.value === 'pending' || status.value === 'idle'),
+	);
+
 	useSeoMeta({
 		title: () => (poll.value ? `${poll.value.title} · Creno` : 'Creno'),
 		robots: 'noindex',
@@ -87,8 +97,27 @@
 </script>
 
 <template>
+	<SkeletonPage v-if="loading">
+		<template #sidebar>
+			<SkeletonParticipants />
+		</template>
+
+		<SkeletonTitle />
+		<div
+			class="bg-elevated flex w-full items-center gap-1 rounded-xl p-1.5 sm:w-fit"
+			aria-hidden="true"
+		>
+			<div class="flex h-5 shrink-0 items-center px-2">
+				<USkeleton class="h-3 w-16" />
+			</div>
+			<div class="bg-default h-8 w-full rounded-lg sm:w-64 md:h-7" />
+		</div>
+		<SkeletonCalendar />
+		<SkeletonBar />
+	</SkeletonPage>
+
 	<UContainer
-		v-if="isNotFound || needsPassword || error || !poll"
+		v-else-if="isNotFound || needsPassword || error || !poll"
 		class="mt-8 max-w-5xl space-y-6 pb-28 md:mt-12"
 	>
 		<UEmpty

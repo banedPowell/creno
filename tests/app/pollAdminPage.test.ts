@@ -73,6 +73,13 @@ registerEndpoint('/api/polls/missing/admin', (event) => {
 let wrapper: VueWrapper | undefined;
 let fetchSpy: ReturnType<typeof vi.fn>;
 let realFetch: typeof globalThis.$fetch;
+// Reads wait on it, so a test can look at the page while it loads
+let gate: Promise<unknown>;
+const holdReads = () => {
+	let release!: () => void;
+	gate = new Promise<void>((resolve) => (release = resolve));
+	return release;
+};
 let answer: (url: string, options: { body?: unknown }) => Promise<unknown>;
 
 const isWrite = (url: string, options?: { method?: string }) =>
@@ -121,11 +128,12 @@ beforeEach(() => {
 	current = adminPoll();
 	navigateToMock.mockClear();
 	realFetch = globalThis.$fetch;
+	gate = Promise.resolve();
 	answer = async () => ({});
 	fetchSpy = vi.fn((url: string, options?: { method?: string }) =>
 		isWrite(url, options)
 			? answer(url, options as { body?: unknown })
-			: realFetch(url, options as never),
+			: gate.then(() => realFetch(url, options as never)),
 	);
 	vi.stubGlobal(
 		'$fetch',
@@ -229,6 +237,31 @@ describe('Creator page: unknown poll', () => {
 
 describe('Creator page: running the poll', () => {
 	beforeEach(() => own());
+
+	it('keeps the frame of the page while the poll loads', async () => {
+		const release = holdReads();
+		await mountPage('/poll/abc/admin');
+
+		const page = wrapper!;
+		for (const part of [
+			'closing',
+			'participants',
+			'danger',
+			'title',
+			'copy-card',
+			'calendar',
+		])
+			expect(page.find(`[data-skeleton-${part}]`).exists()).toBe(true);
+		expect(page.findAll('[data-skeleton-copy-card]')).toHaveLength(2);
+		// The real options stay in place, nothing depends on the poll there
+		expect(page.find('[data-advanced-toggle]').exists()).toBe(true);
+		expect(page.text()).not.toContain('Personne n’a encore répondu');
+
+		release();
+		await loaded();
+		expect(page.find('[data-skeleton-calendar]').exists()).toBe(false);
+		expect(page.find('[data-skeleton-closing]').exists()).toBe(false);
+	});
 
 	it('shows every answer, even hidden from the participants', async () => {
 		current = adminPoll({ hideResults: true });

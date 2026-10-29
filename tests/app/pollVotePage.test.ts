@@ -81,6 +81,17 @@ const isWrite = (url: string) =>
 let wrapper: VueWrapper | undefined;
 let fetchSpy: ReturnType<typeof vi.fn>;
 let realFetch: typeof globalThis.$fetch;
+const withPassword = (options?: { headers?: unknown }) =>
+	!!new Headers(options?.headers as HeadersInit).get('x-creno-password');
+
+// Reads sent with a password wait on it, so a test can look at the page
+// while it loads
+let gate: Promise<unknown>;
+const holdReads = () => {
+	let release!: () => void;
+	gate = new Promise<void>((resolve) => (release = resolve));
+	return release;
+};
 let answer: (url: string) => Promise<unknown>;
 
 const mountPage = async (route = '/poll/abc') => {
@@ -147,9 +158,14 @@ beforeEach(() => {
 		locked: poll({ slug: 'locked', hasPassword: true }),
 	};
 	realFetch = globalThis.$fetch;
+	gate = Promise.resolve();
 	answer = () => Promise.resolve({ id: 'p2', editToken: 'tok-bob' });
 	fetchSpy = vi.fn((url: string, options?: object) =>
-		isWrite(url) ? answer(url) : realFetch(url, options),
+		isWrite(url)
+			? answer(url)
+			: withPassword(options)
+				? gate.then(() => realFetch(url, options))
+				: realFetch(url, options),
 	);
 	vi.stubGlobal(
 		'$fetch',
@@ -225,6 +241,27 @@ describe('Vote page: protected poll', () => {
 		);
 		expect(wrapper!.text()).toContain('Réunion d’équipe');
 		expect(slotBlocks()).toHaveLength(2);
+	});
+
+	it('loads with a password kept from earlier, showing the page frame', async () => {
+		sessionStorage.setItem('creno:password:locked', 'sésame');
+		const release = holdReads();
+		await mountPage('/poll/locked');
+
+		await vi.waitFor(() =>
+			expect(wrapper!.find('[data-skeleton-page]').exists()).toBe(true),
+		);
+		expect(wrapper!.find('[data-skeleton-participants]').exists()).toBe(
+			true,
+		);
+		expect(wrapper!.find('[data-skeleton-calendar]').exists()).toBe(true);
+		expect(wrapper!.text()).not.toContain('Impossible de charger');
+
+		release();
+		await vi.waitFor(() =>
+			expect(wrapper!.text()).toContain('Réunion d’équipe'),
+		);
+		expect(wrapper!.find('[data-skeleton-page]').exists()).toBe(false);
 	});
 
 	it('sends nothing until a password is typed', async () => {

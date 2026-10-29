@@ -40,6 +40,13 @@
 
 	const isNotFound = computed(() => error.value?.statusCode === 404);
 	const isForbidden = computed(() => error.value?.statusCode === 403);
+	const loading = computed(
+		() =>
+			isOwner.value &&
+			!poll.value &&
+			!error.value &&
+			(status.value === 'pending' || status.value === 'idle'),
+	);
 
 	useSeoMeta({
 		title: () => (poll.value ? `${poll.value.title} · Creno` : 'Creno'),
@@ -114,8 +121,11 @@
 							@reopen="reopen"
 						/>
 					</UFormField>
+					<SkeletonClosingField v-else-if="loading" status />
 
+					<SkeletonParticipants v-if="loading" />
 					<PollParticipants
+						v-else
 						v-model="focusedParticipantId"
 						:participants="poll?.participants ?? []"
 					/>
@@ -140,6 +150,7 @@
 						:pending="pending === 'delete'"
 						@confirm="deleteCreno"
 					/>
+					<SkeletonDangerZone v-else-if="loading" />
 				</div>
 			</USidebar>
 
@@ -318,21 +329,21 @@
 					/>
 				</template>
 
-				<div
-					v-else-if="status === 'pending' || status === 'idle'"
-					class="space-y-4"
-				>
-					<USkeleton class="h-10 w-2/3" />
-					<USkeleton class="h-24 w-full" />
-				</div>
+				<SkeletonAdminMain v-else-if="loading" />
 			</div>
 		</UForm>
 
 		<template #fallback>
-			<div class="space-y-4 p-4 sm:p-6">
-				<USkeleton class="h-10 w-2/3" />
-				<USkeleton class="h-24 w-full" />
-			</div>
+			<SkeletonPage>
+				<template #sidebar>
+					<SkeletonClosingField status />
+					<SkeletonParticipants />
+					<SkeletonSettings />
+					<SkeletonDangerZone />
+				</template>
+
+				<SkeletonAdminMain />
+			</SkeletonPage>
 		</template>
 	</ClientOnly>
 </template>
