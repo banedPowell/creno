@@ -209,11 +209,6 @@ export const usePollAnswer = (
 			};
 			save(slug.value, ownEntry.value);
 		}
-		toast.add({
-			title: 'Merci, votre réponse est enregistrée',
-			description: 'Vous pourrez la modifier depuis ce navigateur.',
-			color: 'success',
-		});
 		await refresh();
 		loadAnswer(created.id);
 		revising.value = false;
@@ -230,12 +225,6 @@ export const usePollAnswer = (
 					? { [EDIT_TOKEN_HEADER]: ownEntry.value!.editToken }
 					: {}),
 			},
-		});
-		toast.add({
-			title: own
-				? 'Votre réponse est modifiée'
-				: `Réponse de ${participantName(participantId)} modifiée`,
-			color: 'success',
 		});
 		await refresh();
 		if (own) {

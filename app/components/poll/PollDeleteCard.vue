@@ -8,18 +8,14 @@
 
 <template>
 	<section
-		class="ring-error/30 flex flex-col gap-3 rounded-xl p-4 ring"
+		class="border-default space-y-2 border-t pt-4"
 		aria-labelledby="delete-title"
 	>
-		<div>
-			<h2 id="delete-title" class="text-highlighted font-semibold">
-				Supprimer le Creno
-			</h2>
-			<p class="text-muted text-sm">
-				Le lien cessera de fonctionner et toutes les réponses seront
-				effacées.
-			</p>
-		</div>
+		<h2 id="delete-title" class="text-muted text-sm">Zone de danger</h2>
+		<p class="text-dimmed text-xs">
+			Le lien cessera de fonctionner et toutes les réponses seront
+			effacées.
+		</p>
 
 		<UModal
 			v-model:open="open"
@@ -27,10 +23,12 @@
 			:description="`« ${title} » et toutes ses réponses seront définitivement effacés.`"
 		>
 			<UButton
-				label="Supprimer"
+				label="Supprimer le Creno"
 				icon="i-lucide-trash-2"
 				color="error"
-				variant="soft"
+				variant="ghost"
+				size="sm"
+				class="press -ml-2.5"
 				data-delete
 			/>
 

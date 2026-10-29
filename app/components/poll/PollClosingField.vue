@@ -4,7 +4,10 @@
 
 	const date = defineModel<CalendarDate>({ required: true });
 
-	const props = defineProps<{ minDate: CalendarDate }>();
+	const props = withDefaults(
+		defineProps<{ minDate: CalendarDate; label?: string }>(),
+		{ label: 'Clôture' },
+	);
 
 	const haptic = useWebHaptics();
 	const { sizeMd, sizeXl } = useResponsiveButtonSize();
@@ -52,7 +55,7 @@
 <template>
 	<div class="flex w-full flex-col gap-2">
 		<div class="flex items-center gap-1">
-			<span class="text-muted text-sm">Clôture</span>
+			<span class="text-muted text-sm">{{ label }}</span>
 			<UTooltip
 				:text="closingHint"
 				:ui="{
@@ -71,6 +74,8 @@
 		</div>
 
 		<div class="bg-elevated flex w-full flex-col gap-1 rounded-xl p-1.5">
+			<slot name="leading" />
+
 			<UPopover>
 				<UButton
 					color="neutral"
@@ -153,6 +158,8 @@
 					"
 				/>
 			</div>
+
+			<slot />
 		</div>
 	</div>
 </template>

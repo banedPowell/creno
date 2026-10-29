@@ -308,10 +308,6 @@ export const usePollAdminEditor = (
 			await putSlots(slots, false);
 			pendingSlots.value = null;
 			await applySettings();
-			toast.add({
-				title: 'Modifications enregistrées',
-				color: 'success',
-			});
 			await refresh();
 		} catch (failure) {
 			failed(failure);
@@ -346,10 +342,6 @@ export const usePollAdminEditor = (
 			pending.value = 'settings';
 			try {
 				await applySettings();
-				toast.add({
-					title: 'Modifications enregistrées',
-					color: 'success',
-				});
 				await refresh();
 			} catch (failure) {
 				failed(failure);
@@ -367,7 +359,6 @@ export const usePollAdminEditor = (
 				headers: headers.value,
 			});
 			removePoll(slug.value);
-			toast.add({ title: 'Creno supprimé', color: 'success' });
 			await navigateTo('/');
 		} catch (failure) {
 			failed(failure);

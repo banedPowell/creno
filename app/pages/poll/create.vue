@@ -110,7 +110,6 @@
 		} else if (data.value?.slug && data.value.adminToken) {
 			const { slug, adminToken, title } = data.value;
 			savePoll(slug, { adminToken, title });
-			toast.add({ title: 'Creno lancé avec succès', color: 'success' });
 			await navigateTo(`/poll/${slug}/admin`);
 		}
 	}

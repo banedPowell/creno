@@ -101,12 +101,24 @@
 				}"
 			>
 				<div class="flex flex-col gap-6">
-					<UFormField name="closedAt">
-						<PollClosingField
+					<UFormField v-if="poll" name="closedAt">
+						<PollAdminStatus
 							v-model="closingDate"
 							:min-date="minDate"
+							:closed="isClosed"
+							:closed-at="
+								intent === 'close' ? new Date() : poll.closedAt
+							"
+							:pending="pending === 'settings'"
+							@close="arm('close')"
+							@reopen="reopen"
 						/>
 					</UFormField>
+
+					<PollParticipants
+						v-model="focusedParticipantId"
+						:participants="poll?.participants ?? []"
+					/>
 
 					<PollGridSettings
 						v-model:snap-minutes="snapMinutes"
@@ -120,11 +132,6 @@
 						:show-grid="false"
 						:password-set="!!poll?.hasPassword && !dropPassword"
 						@remove-password="dropPassword = true"
-					/>
-
-					<PollParticipants
-						v-model="focusedParticipantId"
-						:participants="poll?.participants ?? []"
 					/>
 
 					<PollDeleteCard
@@ -233,17 +240,10 @@
 						</UFormField>
 					</div>
 
-					<PollAdminStatus
-						:closed="isClosed"
-						:closed-at="
-							intent === 'close' ? new Date() : poll.closedAt
-						"
-						:chosen-label="
-							chosenSlot ? formatSlotLabel(chosenSlot) : null
-						"
+					<PollChosenSlot
+						v-if="chosenSlot"
+						:label="formatSlotLabel(chosenSlot)"
 						:pending="pending === 'settings'"
-						@close="arm('close')"
-						@reopen="reopen"
 						@unchoose="arm('unchoose')"
 					/>
 

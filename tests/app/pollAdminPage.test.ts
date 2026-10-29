@@ -250,12 +250,27 @@ describe('Creator page: running the poll', () => {
 		expect(wrapper!.text()).toContain('Vous voyez déjà les réponses');
 	});
 
+	it('shows an open poll in the status, next to its closing date', async () => {
+		await mountPage('/poll/abc/admin');
+		await loaded();
+
+		const status = wrapper!.find('[data-admin-status]');
+		expect(status.text()).toContain('Statut');
+		expect(status.find('[data-status-title]').text()).toBe('Ouvert');
+		expect(status.text()).toContain('jusqu’au');
+		expect(status.find('[data-status-pulse]').exists()).toBe(true);
+		expect(status.find('[data-details-closing]').exists()).toBe(true);
+		expect(status.find('[data-close]').exists()).toBe(true);
+		expect(wrapper!.find('[data-chosen-slot]').exists()).toBe(false);
+	});
+
 	it('closes the votes now', async () => {
 		await mountPage('/poll/abc/admin');
 		await loaded();
 
 		await wrapper!.find('[data-close]').trigger('click');
 		expect(wrapper!.find('[data-status-title]').text()).toBe('Fermé');
+		expect(wrapper!.find('[data-status-pulse]').exists()).toBe(false);
 		expect(wrapper!.find('[data-reopen]').exists()).toBe(true);
 		await wrapper!.find('[data-admin-save]').trigger('click');
 		await vi.waitFor(() => expect(writes()).toHaveLength(1));
@@ -265,6 +280,38 @@ describe('Creator page: running the poll', () => {
 		expect(options.method).toBe('PATCH');
 		expect(options.body).toEqual({ closedAt: 'now' });
 		expect(options.headers).toEqual({ 'x-creno-admin': 'tok' });
+	});
+
+	it('takes back the closing before it is saved', async () => {
+		await mountPage('/poll/abc/admin');
+		await loaded();
+
+		await wrapper!.find('[data-close]').trigger('click');
+		await wrapper!.find('[data-reopen]').trigger('click');
+
+		expect(wrapper!.find('[data-status-title]').text()).toBe('Ouvert');
+		expect(wrapper!.find('[data-status-pulse]').exists()).toBe(true);
+	});
+
+	it('reopens a closed poll for a week', async () => {
+		current = adminPoll({ closedAt: '2026-10-09T07:00:00.000Z' });
+		await mountPage('/poll/abc/admin');
+		await loaded();
+
+		const status = wrapper!.find('[data-admin-status]');
+		expect(status.find('[data-status-title]').text()).toBe('Fermé');
+		expect(status.text()).toContain('depuis le');
+		expect(status.find('[data-status-pulse]').exists()).toBe(false);
+		expect(status.find('[data-close]').exists()).toBe(false);
+
+		await status.find('[data-reopen]').trigger('click');
+		await wrapper!.find('[data-admin-save]').trigger('click');
+		await vi.waitFor(() => expect(writes()).toHaveLength(1));
+
+		const { closedAt } = writes()[0]![1].body as { closedAt: string };
+		expect(new Date(closedAt).getTime()).toBe(
+			new Date(2026, 9, 16, 23, 59, 59, 999).getTime(),
+		);
 	});
 
 	it('settles on a slot picked in the calendar', async () => {
@@ -290,13 +337,28 @@ describe('Creator page: running the poll', () => {
 		await mountPage('/poll/abc/admin');
 		await loaded();
 
-		expect(wrapper!.find('[data-status-title]').text()).toContain(
+		expect(wrapper!.find('[data-chosen-slot]').text()).toContain(
 			'Créneau retenu : sam. 10 oct., 14:00 – 15:00',
 		);
 		expect(
 			wrapper!.find('[data-calendar-slot][data-chosen]').exists(),
 		).toBe(true);
 		expect(wrapper!.find('[data-reopen]').exists()).toBe(true);
+	});
+
+	it('takes back the slot settled on', async () => {
+		current = adminPoll({
+			chosenSlotId: 's2',
+			closedAt: '2026-10-09T07:00:00.000Z',
+		});
+		await mountPage('/poll/abc/admin');
+		await loaded();
+
+		await wrapper!.find('[data-unchoose]').trigger('click');
+		await wrapper!.find('[data-admin-save]').trigger('click');
+		await vi.waitFor(() => expect(writes()).toHaveLength(1));
+
+		expect(writes()[0]![1].body).toEqual({ chosenSlotId: null });
 	});
 
 	it('saves only the details that changed', async () => {

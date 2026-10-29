@@ -260,14 +260,11 @@ describe('Vote page: a new answer', () => {
 			},
 		});
 		await vi.waitFor(() =>
-			expect(document.body.textContent).toContain(
-				'Merci, votre réponse est enregistrée',
-			),
+			expect(stored().abc).toEqual({
+				participantId: 'p2',
+				editToken: 'tok-bob',
+			}),
 		);
-		expect(stored().abc).toEqual({
-			participantId: 'p2',
-			editToken: 'tok-bob',
-		});
 
 		await vi.waitFor(() => expect(nameInput().element.value).toBe('Bob'));
 		// Back to the shared view: Bob's choices are in the tally, not the colours
@@ -387,11 +384,6 @@ describe('Vote page: changing one’s own answer', () => {
 				{ slotId: 's1', status: 'yes' },
 				{ slotId: 's2', status: 'yes' },
 			]),
-		);
-		await vi.waitFor(() =>
-			expect(document.body.textContent).toContain(
-				'Votre réponse est modifiée',
-			),
 		);
 	});
 

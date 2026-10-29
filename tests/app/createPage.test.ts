@@ -117,6 +117,14 @@ describe('Create page: guiding the user', () => {
 		expect(wrapper!.text()).toContain('2 créneaux · clôture le 16 oct.');
 	});
 
+	it('only offers a closing date, no status of the poll yet', async () => {
+		await mountPage();
+		expect(wrapper!.text()).toContain('Clôture');
+		expect(wrapper!.find('[data-details-closing]').exists()).toBe(true);
+		expect(wrapper!.find('[data-admin-status]').exists()).toBe(false);
+		expect(wrapper!.find('[data-close]').exists()).toBe(false);
+	});
+
 	it('sends nothing while the poll is invalid', async () => {
 		await mountPage();
 		await wrapper!.find('form').trigger('submit');
@@ -308,7 +316,6 @@ describe('Create page: server answer', () => {
 		expect(
 			JSON.parse(localStorage.getItem(OWNED_POLLS_KEY)!).abc,
 		).toMatchObject({ adminToken: 'tok', title: 'Réunion' });
-		expect(document.body.textContent).toContain('Creno lancé avec succès');
 	});
 
 	it('shows the message the server sends back on failure', async () => {
