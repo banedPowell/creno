@@ -49,15 +49,37 @@
 		{ value: '180', label: '3 h' },
 		{ value: 'custom', label: 'Personnalisé' },
 	];
+
+	const hintUi = {
+		content: 'h-auto max-w-56 items-start py-1.5',
+		text: 'overflow-visible whitespace-normal text-clip',
+	};
 </script>
 
 <template>
 	<div class="flex flex-col gap-5">
-		<UFormField
-			label="Précision de la grille"
-			name="snapMinutes"
-			description="Finesse du survol, du tracé et du redimensionnement."
-		>
+		<UFormField name="snapMinutes">
+			<template #label>
+				<span class="inline-flex items-center gap-1">
+					Précision de la grille
+					<UTooltip
+						text="Finesse du survol, du tracé et du redimensionnement."
+						:ui="hintUi"
+					>
+						<button
+							type="button"
+							class="text-muted hover:text-default"
+							aria-label="Aide sur la précision de la grille"
+							@click.prevent
+						>
+							<UIcon
+								name="i-lucide-circle-help"
+								class="size-3.5"
+							/>
+						</button>
+					</UTooltip>
+				</span>
+			</template>
 			<div class="flex flex-col gap-2">
 				<USelect
 					:model-value="snapChoice"
@@ -77,11 +99,28 @@
 			</div>
 		</UFormField>
 
-		<UFormField
-			label="Longueur par défaut"
-			name="clickSlotDuration"
-			description="Ce qu’un simple clic pose sur le calendrier."
-		>
+		<UFormField name="clickSlotDuration">
+			<template #label>
+				<span class="inline-flex items-center gap-1">
+					Longueur par défaut
+					<UTooltip
+						text="Ce qu’un simple clic pose sur le calendrier."
+						:ui="hintUi"
+					>
+						<button
+							type="button"
+							class="text-muted hover:text-default"
+							aria-label="Aide sur la longueur par défaut"
+							@click.prevent
+						>
+							<UIcon
+								name="i-lucide-circle-help"
+								class="size-3.5"
+							/>
+						</button>
+					</UTooltip>
+				</span>
+			</template>
 			<div class="flex flex-col gap-2">
 				<USelect
 					:model-value="clickChoice"

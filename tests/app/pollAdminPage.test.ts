@@ -160,7 +160,7 @@ describe('Creator page: sharing', () => {
 				'textarea[aria-label="Description du Creno"]',
 			).element.value,
 		).toBe('Ordre du jour');
-		expect(wrapper!.text()).toContain('Les votes sont ouverts');
+		expect(wrapper!.find('[data-status-title]').text()).toBe('Ouvert');
 		expect(linkInput('Lien du Creno').element.value).toBe(publicUrl());
 	});
 
@@ -255,9 +255,7 @@ describe('Creator page: running the poll', () => {
 		await loaded();
 
 		await wrapper!.find('[data-close]').trigger('click');
-		expect(wrapper!.find('[data-status-title]').text()).toBe(
-			'Les votes sont fermés',
-		);
+		expect(wrapper!.find('[data-status-title]').text()).toBe('Fermé');
 		expect(wrapper!.find('[data-reopen]').exists()).toBe(true);
 		await wrapper!.find('[data-admin-save]').trigger('click');
 		await vi.waitFor(() => expect(writes()).toHaveLength(1));

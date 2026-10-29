@@ -16,40 +16,31 @@
 
 <template>
 	<section
-		class="bg-elevated flex flex-col gap-3 rounded-xl p-4 sm:flex-row sm:items-center sm:justify-between"
+		class="flex flex-wrap items-center justify-between gap-2"
 		aria-label="Statut du Creno"
 		data-admin-status
 	>
-		<div class="flex items-start gap-3">
-			<UIcon
-				:name="
-					chosenLabel
-						? 'i-lucide-calendar-check'
-						: closed
-							? 'i-lucide-calendar-x'
-							: 'i-lucide-calendar-clock'
-				"
-				class="mt-0.5 size-5 shrink-0"
-				:class="chosenLabel || !closed ? 'text-success' : 'text-muted'"
+		<div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5">
+			<span
+				class="size-2 shrink-0 rounded-full"
+				:class="chosenLabel || !closed ? 'bg-success' : 'bg-muted'"
 			/>
-			<div>
-				<p class="text-highlighted font-medium" data-status-title>
-					{{
-						chosenLabel
-							? `Créneau retenu : ${chosenLabel}`
-							: closed
-								? 'Les votes sont fermés'
-								: 'Les votes sont ouverts'
-					}}
-				</p>
-				<p class="text-muted text-sm">
-					{{
-						closed
-							? `Fermé depuis le ${formatFullDate(new Date(closedAt))}.`
-							: `Jusqu’au ${formatFullDate(new Date(closedAt))}.`
-					}}
-				</p>
-			</div>
+			<p class="text-highlighted text-sm font-medium" data-status-title>
+				{{
+					chosenLabel
+						? `Créneau retenu : ${chosenLabel}`
+						: closed
+							? 'Fermé'
+							: 'Ouvert'
+				}}
+			</p>
+			<p class="text-muted text-sm">
+				{{
+					closed
+						? `depuis le ${formatDayMonth(new Date(closedAt))}`
+						: `jusqu’au ${formatDayMonth(new Date(closedAt))}`
+				}}
+			</p>
 		</div>
 
 		<div class="flex flex-wrap gap-1.5">

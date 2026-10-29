@@ -11,6 +11,7 @@
 
 	const route = useRoute();
 	const slug = computed(() => String(route.params.slug));
+	const sidebarOpen = ref(true);
 	const { getAdminToken } = useOwnedPolls();
 
 	const ownEntry = shallowRef<OwnVote | null>(null);
@@ -86,7 +87,10 @@
 </script>
 
 <template>
-	<UContainer class="mt-8 max-w-5xl space-y-6 pb-28 md:mt-12">
+	<UContainer
+		v-if="isNotFound || needsPassword || error || !poll"
+		class="mt-8 max-w-5xl space-y-6 pb-28 md:mt-12"
+	>
 		<UEmpty
 			v-if="isNotFound"
 			icon="i-lucide-calendar-x"
@@ -105,7 +109,7 @@
 		/>
 
 		<UEmpty
-			v-else-if="error || !poll"
+			v-else
 			icon="i-lucide-cloud-off"
 			title="Impossible de charger ce Creno"
 			description="Vérifie ta connexion puis réessaie."
@@ -118,8 +122,46 @@
 				},
 			]"
 		/>
+	</UContainer>
 
-		<template v-else>
+	<UForm
+		v-else
+		:state="state"
+		:validate="validate"
+		class="flex min-h-[calc(100svh-var(--ui-header-height))] min-w-0 flex-1"
+		@submit="onSubmit"
+	>
+		<USidebar
+			v-model:open="sidebarOpen"
+			collapsible="offcanvas"
+			mode="slideover"
+			:style="{ '--sidebar-width': '20rem' }"
+			:ui="{
+				gap: 'h-[calc(100%-var(--ui-header-height))]',
+				container:
+					'top-(--ui-header-height) h-[calc(100%-var(--ui-header-height))]',
+			}"
+		>
+			<PollParticipants
+				v-model="focusedParticipantId"
+				:participants="poll.participants"
+				:own-id="ownEntry?.participantId"
+				:can-edit="isOpenPolicy && !isClosed"
+				:editing-id="editingId"
+				@edit="onEditParticipant"
+			/>
+		</USidebar>
+
+		<div class="flex min-w-0 flex-1 flex-col gap-6 p-4 sm:p-6">
+			<UButton
+				icon="i-lucide-panel-left"
+				color="neutral"
+				variant="ghost"
+				aria-label="Afficher les participants"
+				class="w-fit lg:hidden"
+				@click="sidebarOpen = !sidebarOpen"
+			/>
+
 			<PollSummary :title="poll.title" :description="poll.description" />
 
 			<UAlert
@@ -152,60 +194,44 @@
 				description="Répondez sans être influencé par les choix des autres."
 			/>
 
-			<UForm
-				:state="state"
-				:validate="validate"
-				class="space-y-6"
-				@submit="onSubmit"
-			>
-				<UFormField v-if="!isClosed" name="name">
-					<PollNameField
-						v-model="state.name"
-						:editing="revising ? editing : null"
-						:disabled="locked"
-					/>
-				</UFormField>
-
-				<UFormField name="votes">
-					<CalendarRoot
-						ref="calendar"
-						:model-value="calendarSlots"
-						:hour-start="0"
-						:hour-end="24"
-						:initial-date="
-							firstDay.upcoming
-								? parseIsoDate(firstDay.upcoming)
-								: undefined
-						"
-						:min-date="firstDay.first"
-						:vote="voteState"
-					/>
-				</UFormField>
-
-				<PollParticipants
-					v-model="focusedParticipantId"
-					:participants="poll.participants"
-					:own-id="ownEntry?.participantId"
-					:can-edit="isOpenPolicy && !isClosed"
-					:editing-id="editingId"
-					@edit="onEditParticipant"
+			<UFormField v-if="!isClosed" name="name">
+				<PollNameField
+					v-model="state.name"
+					:editing="revising ? editing : null"
+					:disabled="locked"
 				/>
+			</UFormField>
 
-				<PollAnswerBar
-					:is-closed="isClosed"
-					:has-best="hasBest"
-					:best-count="bestCount"
-					:best-label="bestLabel"
-					:summary="summary"
-					:is-valid="isValid"
-					:locked="locked"
-					:revising="revising"
-					:pending="pending"
-					@reveal="revealBest"
-					@revise="startRevision"
-					@cancel="cancelRevision"
+			<UFormField name="votes">
+				<CalendarRoot
+					ref="calendar"
+					:model-value="calendarSlots"
+					:hour-start="0"
+					:hour-end="24"
+					:initial-date="
+						firstDay.upcoming
+							? parseIsoDate(firstDay.upcoming)
+							: undefined
+					"
+					:min-date="firstDay.first"
+					:vote="voteState"
 				/>
-			</UForm>
-		</template>
-	</UContainer>
+			</UFormField>
+
+			<PollAnswerBar
+				:is-closed="isClosed"
+				:has-best="hasBest"
+				:best-count="bestCount"
+				:best-label="bestLabel"
+				:summary="summary"
+				:is-valid="isValid"
+				:locked="locked"
+				:revising="revising"
+				:pending="pending"
+				@reveal="revealBest"
+				@revise="startRevision"
+				@cancel="cancelRevision"
+			/>
+		</div>
+	</UForm>
 </template>
