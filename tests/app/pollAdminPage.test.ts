@@ -373,6 +373,81 @@ describe('Creator page: running the poll', () => {
 			method: 'PATCH',
 			body: { title: 'Point hebdo' },
 		});
+		// Saving stays quiet, the page itself shows the new state
+		await flushPromises();
+		expect(document.body.textContent).not.toContain(
+			'Modifications enregistrées',
+		);
+	});
+
+	it('drops every change on cancel, sending nothing', async () => {
+		await mountPage('/poll/abc/admin');
+		await loaded();
+
+		await wrapper!.find('[data-details-title]').setValue('Point hebdo');
+		await wrapper!.find('[data-close]').trigger('click');
+		await wrapper!.find('[data-admin-cancel]').trigger('click');
+
+		expect(
+			wrapper!.find<HTMLInputElement>('[data-details-title]').element
+				.value,
+		).toBe('Réunion d’équipe');
+		expect(wrapper!.find('[data-status-title]').text()).toBe('Ouvert');
+		expect(wrapper!.find('[data-admin-save]').exists()).toBe(false);
+		expect(writes()).toHaveLength(0);
+	});
+
+	it('changes the advanced options', async () => {
+		await mountPage('/poll/abc/admin');
+		await loaded();
+
+		await wrapper!.find('[data-advanced-toggle]').trigger('click');
+		await vi.waitFor(() =>
+			expect(wrapper!.find('[data-option-hide-results]').exists()).toBe(
+				true,
+			),
+		);
+		const hide = wrapper!.find('[data-option-hide-results]');
+		await (
+			hide.element.tagName === 'BUTTON' ? hide : hide.find('button')
+		).trigger('click');
+		await wrapper!.find('[data-admin-save]').trigger('click');
+		await vi.waitFor(() => expect(writes()).toHaveLength(1));
+
+		expect(writes()[0]![1].body).toEqual({ hideResults: true });
+	});
+
+	it('takes the password off', async () => {
+		current = adminPoll({ hasPassword: true });
+		await mountPage('/poll/abc/admin');
+		await loaded();
+
+		await wrapper!.find('[data-advanced-toggle]').trigger('click');
+		await vi.waitFor(() =>
+			expect(wrapper!.find('[data-remove-password]').exists()).toBe(true),
+		);
+		await wrapper!.find('[data-remove-password]').trigger('click');
+		await wrapper!.find('[data-admin-save]').trigger('click');
+		await vi.waitFor(() => expect(writes()).toHaveLength(1));
+
+		expect(writes()[0]![1].body).toEqual({ password: null });
+	});
+
+	it('shows the message the server sends back on failure', async () => {
+		answer = () =>
+			Promise.reject({ data: { message: 'Date de clôture invalide' } });
+		await mountPage('/poll/abc/admin');
+		await loaded();
+
+		await wrapper!.find('[data-details-title]').setValue('Point hebdo');
+		await wrapper!.find('[data-admin-save]').trigger('click');
+
+		await vi.waitFor(() =>
+			expect(document.body.textContent).toContain(
+				'Date de clôture invalide',
+			),
+		);
+		expect(wrapper!.find('[data-admin-save]').exists()).toBe(true);
 	});
 
 	it('asks before removing slots that hold answers', async () => {

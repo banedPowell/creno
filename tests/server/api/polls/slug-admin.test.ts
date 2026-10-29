@@ -192,7 +192,13 @@ describe('routes organisateur', () => {
 		});
 
 		it.each([
+			[{}, 'Les créneaux sont requis'],
 			[{ slots: [] }, 'Gardez au moins un créneau'],
+			[{ slots: Array(101).fill(SLOTS[1]) }, '100 créneaux maximum'],
+			[
+				{ slots: [{ start: 'demain', end: SLOTS[1]!.end }] },
+				'Début de créneau invalide',
+			],
 			[
 				{
 					slots: [

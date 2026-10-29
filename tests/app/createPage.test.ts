@@ -316,6 +316,7 @@ describe('Create page: server answer', () => {
 		expect(
 			JSON.parse(localStorage.getItem(OWNED_POLLS_KEY)!).abc,
 		).toMatchObject({ adminToken: 'tok', title: 'Réunion' });
+		expect(document.body.textContent).not.toContain('succès');
 	});
 
 	it('shows the message the server sends back on failure', async () => {

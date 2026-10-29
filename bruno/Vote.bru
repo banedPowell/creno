@@ -10,16 +10,28 @@ post {
   auth: inherit
 }
 
+headers {
+  ~x-creno-password: {{password}}
+}
+
 body:json {
   {
     "name": "Alice",
     "votes": [
-      { "slotId": "REPLACE_WITH_SLOT_ID_1", "status": "yes" },
-      { "slotId": "REPLACE_WITH_SLOT_ID_2", "status": "maybe" }
+      { "slotId": "{{slotId1}}", "status": "yes" },
+      { "slotId": "{{slotId2}}", "status": "maybe" }
     ]
   }
 }
 
-vars:pre-request {
-  slug: REPLACE_WITH_SLUG
+script:post-response {
+  // The edit token lets Alice change her answer later
+  if (res.status === 201) {
+    bru.setVar("participantId", res.body.id);
+    bru.setVar("editToken", res.body.editToken);
+  }
+}
+
+docs {
+  `status` : `yes` | `maybe`, un créneau absent vaut non. Répond 410 une fois le Creno fermé.
 }

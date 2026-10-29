@@ -10,6 +10,10 @@ get {
   auth: inherit
 }
 
-vars:pre-request {
-  slug: REPLACE_WITH_SLUG
+headers {
+  ~x-creno-password: {{password}}
+}
+
+docs {
+  Activer `x-creno-password` (mot encodé en URI) pour un Creno protégé.
 }
