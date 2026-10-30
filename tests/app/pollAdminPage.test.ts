@@ -5,7 +5,6 @@ import {
 	registerEndpoint,
 } from '@nuxt/test-utils/runtime';
 import { flushPromises, type VueWrapper } from '@vue/test-utils';
-import { getHeader } from 'h3';
 import { UApp } from '#components';
 import AdminPage from '../../app/pages/poll/[slug]/admin.vue';
 import { OWNED_POLLS_KEY } from '../../app/composables/useOwnedPolls';
@@ -56,7 +55,7 @@ const adminPoll = (overrides: object = {}) => ({
 let current: ReturnType<typeof adminPoll>;
 
 registerEndpoint('/api/polls/abc/admin', (event) => {
-	if (getHeader(event, 'x-creno-admin') !== 'tok') {
+	if (event.node.req.headers['x-creno-admin'] !== 'tok') {
 		event.node.res.statusCode = 403;
 		return {
 			statusCode: 403,

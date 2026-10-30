@@ -1,3 +1,5 @@
+import { vi } from 'vitest';
+
 // Dates are built in local time, a fixed zone keeps the clock change days
 // and the ISO strings the same on every machine
 process.env.TZ = 'Europe/Paris';
@@ -56,3 +58,16 @@ if (navigatorRef) {
 		value: { effectiveType: 'slow-2g' },
 	});
 }
+
+// Since Nuxt 4.6, useFetch calls the `$fetch` it imports from `#build/fetch`
+// instead of the global one. Route it back through the global so the tests'
+// stubs still see the requests.
+vi.mock('#build/fetch', async (importOriginal) => {
+	const original = await importOriginal<typeof import('#build/fetch')>();
+	const route = new Proxy(original.$fetch, {
+		apply: (_target, thisArg, args) =>
+			Reflect.apply(globalThis.$fetch, thisArg, args),
+		get: (target, key) => Reflect.get(globalThis.$fetch ?? target, key),
+	});
+	return { ...original, $fetch: route };
+});

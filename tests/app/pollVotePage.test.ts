@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mountSuspended, registerEndpoint } from '@nuxt/test-utils/runtime';
 import { flushPromises, type VueWrapper } from '@vue/test-utils';
-import { getHeader } from 'h3';
 import { UApp } from '#components';
 import VotePage from '../../app/pages/poll/[slug]/index.vue';
 import { OWN_VOTES_KEY } from '../../app/composables/useOwnVotes';
@@ -61,7 +60,8 @@ let results: Record<string, object>;
 for (const slug of ['abc', 'closed', 'empty', 'open'])
 	registerEndpoint(`/api/polls/${slug}/results`, () => results[slug]);
 registerEndpoint('/api/polls/locked/results', (event) => {
-	const given = getHeader(event, 'x-creno-password');
+	const given = event.node.req.headers['x-creno-password'] as
+		string | undefined;
 	if (given && decodeURIComponent(given) === 'sésame') return results.locked;
 	event.node.res.statusCode = 401;
 	return {
