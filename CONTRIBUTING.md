@@ -36,6 +36,24 @@ Une fonctionnalité qui ne tient pas dans une seule PR est mergée désactivée,
 
 Un flag ne vit pas indéfiniment : une fois la fonctionnalité activée en production et stable, une PR retire le flag et le code mort.
 
+## Livrer en production
+
+1. Ouvrir une PR `dev` → `main`, titrée par exemple `chore(release): livrer les créneaux exportables`.
+2. La merger (merge commit, seule méthode autorisée sur `main`).
+3. Le workflow _Release_ lit les commits arrivés depuis le dernier tag, crée le tag `vX.Y.Z` et publie la release. S'il n'y a que des `chore`, `docs`, `ci`…, il ne publie rien.
+4. L'hébergeur, branché sur `main`, déploie de lui-même.
+
+On ne livre jamais `main` autrement que depuis `dev`, et on ne commite jamais directement sur `main`.
+
+### Correctif urgent
+
+Pas de raccourci par `main` : un correctif suit le même chemin, simplement sans attendre.
+
+1. Branche `fix/...` depuis `dev`, PR, squash dans `dev`.
+2. PR `dev` → `main` aussitôt, merge.
+
+Si `dev` contient des fonctionnalités pas prêtes, elles doivent être derrière un feature flag : c'est ce qui permet de livrer `dev` à tout moment.
+
 ## Review
 
 - **Auteur :** relire son propre diff, remplir _Comment tester_, commenter les passages délicats.
@@ -46,7 +64,7 @@ Un flag ne vit pas indéfiniment : une fois la fonctionnalité activée en produ
 
 | Workflow                   | Déclencheur              | Rôle                                                   |
 | -------------------------- | ------------------------ | ------------------------------------------------------ |
-| `ci.yml`                   | PR, push `dev`/`main`    | format, lint, typecheck, tests, build                  |
+| `ci.yml`                   | PR, push `main`          | format, lint, typecheck, tests, build                  |
 | `pr.yml`                   | PR                       | vérifie le titre, pose les labels `type:*` et `area:*` |
 | `release.yml`              | push `main`              | tag `vX.Y.Z` et release avec notes groupées par label  |
 | `dependabot-automerge.yml` | PR Dependabot            | merge auto des mises à jour mineures et correctives    |

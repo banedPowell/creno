@@ -64,3 +64,7 @@ NUXT_PUBLIC_FEATURES_MY_POLLS=true
 ```
 
 Déclaration dans `shared/utils/features.ts`, lecture avec `useFeature('myPolls')` côté app et `requireFeature('myPolls')` côté serveur. Voir [CONTRIBUTING.md](CONTRIBUTING.md#feature-flags).
+
+## Licence
+
+[PolyForm Noncommercial 1.0.0](LICENSE.md) : libre d'utiliser, de modifier et de redistribuer Creno pour tout usage non commercial (personnel, associatif, éducatif, recherche…). Toute utilisation commerciale est interdite sans accord préalable.
