@@ -24,7 +24,8 @@
 		"format:fix": "prettier --write .",
 		"typecheck": "nuxt typecheck",
 		"check": "pnpm i && pnpm format && pnpm lint && pnpm typecheck && pnpm test:run",
-		"fix": "pnpm format:fix && pnpm lint:fix"
+		"fix": "pnpm format:fix && pnpm lint:fix",
+		"prepare": "simple-git-hooks"
 	},
 	"dependencies": {
 		"@compodium/nuxt": "0.1.0-beta.12",
@@ -45,18 +46,42 @@
 		"zod": "^4.3.6"
 	},
 	"devDependencies": {
+		"@commitlint/cli": "^21.2.4",
+		"@commitlint/config-conventional": "^21.2.4",
 		"@nuxt/test-utils": "^4.0.0",
 		"@vue/test-utils": "^2.4.6",
 		"drizzle-kit": "^0.31.9",
 		"eslint": "^10.0.2",
 		"eslint-plugin-prettier": "^5.5.5",
 		"happy-dom": "^20.7.0",
+		"lint-staged": "^17.6.0",
 		"prettier": "^3.8.1",
 		"prettier-plugin-tailwindcss": "^0.7.2",
+		"simple-git-hooks": "^2.14.0",
 		"tailwindcss": "^4.2.1",
 		"typescript": "^5.9.3",
 		"vitest": "^4.0.18",
 		"vue-tsc": "^3.2.5"
+	},
+	"simple-git-hooks": {
+		"pre-commit": "pnpm exec lint-staged",
+		"commit-msg": "pnpm exec commitlint --edit \"$1\""
+	},
+	"lint-staged": {
+		"*.{ts,mjs,vue}": [
+			"eslint --fix"
+		],
+		"*.{json,css,yml,yaml}": [
+			"prettier --write"
+		]
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	},
+	"engines": {
+		"node": ">=22.12"
 	},
 	"packageManager": "pnpm@10.30.3"
 }

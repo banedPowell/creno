@@ -3,5 +3,12 @@
 	"vueIndentScriptAndStyle": true,
 	"singleQuote": true,
 	"tabWidth": 4,
-	"plugins": ["prettier-plugin-tailwindcss"]
+	"endOfLine": "lf",
+	"plugins": ["prettier-plugin-tailwindcss"],
+	"overrides": [
+		{
+			"files": "*.{yml,yaml}",
+			"options": { "useTabs": false, "tabWidth": 2 }
+		}
+	]
 }
