@@ -1,75 +1,54 @@
-# Nuxt Minimal Starter
+# Creno
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Application Nuxt 4 pour organiser des sondages de créneaux : on propose des plages horaires, les participants indiquent leurs disponibilités.
 
-## Setup
+Stack : Nuxt 4 · Nuxt UI · Drizzle ORM + Turso (libSQL) · Vitest.
 
-Make sure to install dependencies:
+## Prérequis
+
+- Node.js 22 (voir `.nvmrc`)
+- pnpm (version fixée par `packageManager`, activable via `corepack enable`)
+- Une base Turso pour le développement fullstack
+
+## Installation
 
 ```bash
-# npm
-npm install
-
-# pnpm
 pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
+cp .env.example .env   # puis renseigner TURSO_DATABASE_URL et TURSO_AUTH_TOKEN
 ```
 
-## Development Server
+`pnpm install` installe aussi les hooks Git (voir plus bas).
 
-Start the development server on `http://localhost:3000`:
+## Scripts
 
-```bash
-# npm
-npm run dev
+| Commande                 | Rôle                                                         |
+| ------------------------ | ------------------------------------------------------------ |
+| `pnpm dev`               | Serveur de développement                                     |
+| `pnpm dev:fullstack`     | Installe, migre la base et lance le dev en HTTPS sur le LAN  |
+| `pnpm build`             | Build de production                                          |
+| `pnpm test`              | Tests en mode watch (`test:server`, `test:app` pour cibler)  |
+| `pnpm check`             | Format, lint, typecheck et tests : identique à la CI         |
+| `pnpm fix`               | Corrige automatiquement le format et le lint                 |
+| `pnpm drizzle:generate`  | Génère une migration depuis `server/db/schema.ts`            |
+| `pnpm drizzle:migrate`   | Applique les migrations                                      |
+| `pnpm drizzle:studio`    | Explorateur de base                                          |
 
-# pnpm
-pnpm dev
+## Workflow Git
 
-# yarn
-yarn dev
+- `main` : production. `dev` : intégration. Les deux sont protégées (PR obligatoire, CI verte, pas de force push).
+- Une branche par sujet depuis `dev` : `feat/...`, `fix/...`, `chore/...`, puis PR vers `dev`.
+- `dev` est fusionnée dans `main` par PR pour livrer.
+- Messages de commit au format [Conventional Commits](https://www.conventionalcommits.org/) (`feat: ...`, `fix: ...`), vérifiés par commitlint.
 
-# bun
-bun run dev
-```
+### Hooks Git
 
-## Production
+- **pre-commit** : ESLint et Prettier sur les fichiers indexés (lint-staged).
+- **commit-msg** : validation Conventional Commits.
 
-Build the application for production:
+### CI
 
-```bash
-# npm
-npm run build
+GitHub Actions (`.github/workflows/ci.yml`) exécute format, lint, typecheck, tests et build sur chaque PR et chaque push sur `main`/`dev`. Dependabot propose chaque semaine les mises à jour de dépendances vers `dev`.
 
-# pnpm
-pnpm build
+## Éditeur
 
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Les réglages VS Code recommandés sont dans `.vscode/` (formatage à l'enregistrement, ESLint). `.editorconfig` et `.gitattributes` garantissent tabulations et fins de ligne LF sur tous les OS.
