@@ -54,3 +54,13 @@ GitHub Actions (`.github/workflows/ci.yml`) exécute format, lint, typecheck, te
 ## Éditeur
 
 Les réglages VS Code recommandés sont dans `.vscode/` (formatage à l'enregistrement, ESLint). `.editorconfig` et `.gitattributes` garantissent tabulations et fins de ligne LF sur tous les OS.
+
+## Feature flags
+
+Les fonctionnalités inachevées sont mergées désactivées et s'activent par environnement, sans rebuild :
+
+```bash
+NUXT_PUBLIC_FEATURES_MY_POLLS=true
+```
+
+Déclaration dans `shared/utils/features.ts`, lecture avec `useFeature('myPolls')` côté app et `requireFeature('myPolls')` côté serveur. Voir [CONTRIBUTING.md](CONTRIBUTING.md#feature-flags).
