@@ -1,5 +1,6 @@
 name: Fonctionnalité
 description: Un besoin utilisateur à couvrir
+title: 'feat: '
 labels: ['type:feature']
 body:
   - type: textarea
