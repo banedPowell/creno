@@ -26,6 +26,8 @@ export default defineConfig({
 					],
 					setupFiles: ['./tests/app/setup.ts'],
 					restoreMocks: true,
+					// Each file boots its own Nuxt, which outlasts 10s on a busy machine
+					hookTimeout: 30_000,
 				},
 			}),
 		],

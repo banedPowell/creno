@@ -34,5 +34,10 @@ export const useOwnedPolls = () => {
 	const getAdminToken = (slug: string): string | undefined =>
 		polls.value[slug]?.adminToken;
 
-	return { polls, savePoll, getAdminToken };
+	const removePoll = (slug: string) => {
+		const { [slug]: _removed, ...rest } = polls.value;
+		polls.value = rest;
+	};
+
+	return { polls, savePoll, getAdminToken, removePoll };
 };

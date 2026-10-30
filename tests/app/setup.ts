@@ -32,6 +32,21 @@ Object.defineProperty(globalThis, 'localStorage', {
 	writable: true,
 });
 
+// The color mode plugin reads a helper its inline head script defines,
+// which never runs in tests, and its own test fallback is not picked up
+if (typeof window !== 'undefined' && !('__NUXT_COLOR_MODE__' in window)) {
+	Object.defineProperty(window, '__NUXT_COLOR_MODE__', {
+		configurable: true,
+		value: {
+			preference: 'light',
+			value: 'light',
+			getColorScheme: () => 'light',
+			addColorScheme: () => {},
+			removeColorScheme: () => {},
+		},
+	});
+}
+
 // Nuxt loads the app manifest one second after the app is ready. That timer
 // outlives the test environment, then calls $fetch after teardown removed it.
 const navigatorRef = globalThis.navigator;

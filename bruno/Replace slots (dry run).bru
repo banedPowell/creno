@@ -1,0 +1,30 @@
+meta {
+  name: Replace slots (dry run)
+  type: http
+  seq: 9
+}
+
+put {
+  url: {{baseUrl}}/api/polls/{{slug}}/slots
+  body: json
+  auth: inherit
+}
+
+headers {
+  x-creno-admin: {{adminToken}}
+}
+
+body:json {
+  {
+    "dryRun": true,
+    "slots": [
+      { "id": "{{slotId1}}", "start": "2026-12-07T09:30:00.000Z", "end": "2026-12-07T10:30:00.000Z" },
+      { "start": "2026-12-09T09:00:00.000Z", "end": "2026-12-09T10:00:00.000Z" }
+    ]
+  }
+}
+
+docs {
+  Compte les votes que la modification ferait perdre, sans rien écrire.
+  Réponse : `{ lostVotes, slots: null }`.
+}

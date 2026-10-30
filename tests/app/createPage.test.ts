@@ -117,6 +117,14 @@ describe('Create page: guiding the user', () => {
 		expect(wrapper!.text()).toContain('2 créneaux · clôture le 16 oct.');
 	});
 
+	it('only offers a closing date, no status of the poll yet', async () => {
+		await mountPage();
+		expect(wrapper!.text()).toContain('Clôture');
+		expect(wrapper!.find('[data-details-closing]').exists()).toBe(true);
+		expect(wrapper!.find('[data-admin-status]').exists()).toBe(false);
+		expect(wrapper!.find('[data-close]').exists()).toBe(false);
+	});
+
 	it('sends nothing while the poll is invalid', async () => {
 		await mountPage();
 		await wrapper!.find('form').trigger('submit');
@@ -138,6 +146,8 @@ describe('Create page: what is sent', () => {
 		expect(sentBody()).toEqual({
 			title: 'Réunion d’équipe',
 			closedAt: '2026-10-16T21:59:59.999Z',
+			votePolicy: 'token',
+			hideResults: false,
 			slots: [
 				{
 					start: '2026-10-10T07:00:00.000Z',
@@ -148,6 +158,124 @@ describe('Create page: what is sent', () => {
 					end: '2026-10-10T14:00:00.000Z',
 				},
 			],
+		});
+	});
+
+	const openAdvanced = async () => {
+		await wrapper!.find('[data-advanced-toggle]').trigger('click');
+		await vi.waitFor(() =>
+			expect(wrapper!.find('[data-advanced-options]').exists()).toBe(
+				true,
+			),
+		);
+	};
+
+	const pick = async (selector: string, value: string) => {
+		const node = wrapper!.find(selector);
+		let parent = (
+			node.element as unknown as {
+				__vueParentComponent?: {
+					type?: { name?: string; __name?: string };
+					parent?: unknown;
+					emit: (event: string, value: string) => void;
+				};
+			}
+		).__vueParentComponent;
+		const target = selector.includes('custom') ? 'UInputNumber' : 'USelect';
+		while (parent && (parent.type?.name || parent.type?.__name) !== target)
+			parent = parent.parent as typeof parent;
+		parent!.emit(
+			'update:modelValue',
+			selector.includes('custom') ? Number(value) : value,
+		);
+		await flushPromises();
+	};
+
+	it('places a one hour slot when that length is chosen, and keeps it off the payload', async () => {
+		await mountPage();
+		await titleInput().setValue('Réunion');
+		await openAdvanced();
+		await pick('[data-option-click]', '60');
+		await clickColumn(wrapper!, TOMORROW, '10:00');
+		await submit();
+
+		const body = sentBody();
+		expect(body.slots).toEqual([
+			{
+				start: '2026-10-10T08:00:00.000Z',
+				end: '2026-10-10T09:00:00.000Z',
+			},
+		]);
+		expect(body).not.toHaveProperty('snapMinutes');
+		expect(body).not.toHaveProperty('clickSlotDuration');
+	});
+
+	it('keeps Personnalisé open when the typed length matches a preset', async () => {
+		await mountPage();
+		await titleInput().setValue('Réunion');
+		await openAdvanced();
+		await pick('[data-option-click]', 'custom');
+
+		expect(wrapper!.find('[data-option-click-custom]').exists()).toBe(true);
+		await pick('[data-option-click-custom]', '60');
+		expect(wrapper!.find('[data-option-click-custom]').exists()).toBe(true);
+
+		await clickColumn(wrapper!, TOMORROW, '10:00');
+		await submit();
+		expect(sentBody().slots[0]).toEqual({
+			start: '2026-10-10T08:00:00.000Z',
+			end: '2026-10-10T09:00:00.000Z',
+		});
+	});
+
+	it('snaps a click to the hour when the grid precision is one hour', async () => {
+		await mountPage();
+		await titleInput().setValue('Réunion');
+		await openAdvanced();
+		await pick('[data-option-snap]', '60');
+		await clickColumn(wrapper!, TOMORROW, '10:20');
+		await submit();
+
+		expect(sentBody().slots[0]!.start).toBe('2026-10-10T08:00:00.000Z');
+	});
+
+	it('sends the advanced options, the password only once typed', async () => {
+		await mountPage();
+		await titleInput().setValue('Réunion');
+		await clickColumn(wrapper!, TOMORROW, '10:00');
+
+		await wrapper!.find('[data-advanced-toggle]').trigger('click');
+		await vi.waitFor(() =>
+			expect(wrapper!.find('[data-advanced-options]').exists()).toBe(
+				true,
+			),
+		);
+		await wrapper!
+			.find('[data-advanced-options] button[role="switch"]')
+			.trigger('click');
+		const openOption = wrapper!
+			.findAll('[data-option-policy] label')
+			.find((item) => item.text().includes('Réponses ouvertes'))!;
+		expect(openOption.text()).toContain(
+			'Tout le monde peut modifier toutes les réponses.',
+		);
+		await openOption.trigger('click');
+		await wrapper!
+			.find('[data-option-policy] button[value="open"]')
+			.trigger('click');
+
+		const password = wrapper!.find('input[aria-label="Mot de protection"]');
+		await password.setValue('ab');
+		expect(wrapper!.text()).toContain('au moins 4 caractères');
+		expect(submitButton().attributes('disabled')).toBeDefined();
+
+		await password.setValue('sésame');
+		await submit();
+
+		expect(sentBody()).toMatchObject({
+			votePolicy: 'open',
+			hideResults: true,
+			password: 'sésame',
 		});
 	});
 
@@ -188,7 +316,7 @@ describe('Create page: server answer', () => {
 		expect(
 			JSON.parse(localStorage.getItem(OWNED_POLLS_KEY)!).abc,
 		).toMatchObject({ adminToken: 'tok', title: 'Réunion' });
-		expect(document.body.textContent).toContain('Creno lancé avec succès');
+		expect(document.body.textContent).not.toContain('succès');
 	});
 
 	it('shows the message the server sends back on failure', async () => {

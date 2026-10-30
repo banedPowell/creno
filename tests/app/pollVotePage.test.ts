@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { mountSuspended, registerEndpoint } from '@nuxt/test-utils/runtime';
 import { flushPromises, type VueWrapper } from '@vue/test-utils';
+import { getHeader } from 'h3';
 import { UApp } from '#components';
 import VotePage from '../../app/pages/poll/[slug]/index.vue';
 import { OWN_VOTES_KEY } from '../../app/composables/useOwnVotes';
@@ -59,6 +60,15 @@ let results: Record<string, object>;
 
 for (const slug of ['abc', 'closed', 'empty', 'open'])
 	registerEndpoint(`/api/polls/${slug}/results`, () => results[slug]);
+registerEndpoint('/api/polls/locked/results', (event) => {
+	const given = getHeader(event, 'x-creno-password');
+	if (given && decodeURIComponent(given) === 'sésame') return results.locked;
+	event.node.res.statusCode = 401;
+	return {
+		statusCode: 401,
+		message: given ? 'Mot de passe incorrect' : 'Mot de passe requis',
+	};
+});
 registerEndpoint('/api/polls/missing/results', (event) => {
 	event.node.res.statusCode = 404;
 	return { statusCode: 404, message: 'Sondage introuvable' };
@@ -71,6 +81,17 @@ const isWrite = (url: string) =>
 let wrapper: VueWrapper | undefined;
 let fetchSpy: ReturnType<typeof vi.fn>;
 let realFetch: typeof globalThis.$fetch;
+const withPassword = (options?: { headers?: unknown }) =>
+	!!new Headers(options?.headers as HeadersInit).get('x-creno-password');
+
+// Reads sent with a password wait on it, so a test can look at the page
+// while it loads
+let gate: Promise<unknown>;
+const holdReads = () => {
+	let release!: () => void;
+	gate = new Promise<void>((resolve) => (release = resolve));
+	return release;
+};
 let answer: (url: string) => Promise<unknown>;
 
 const mountPage = async (route = '/poll/abc') => {
@@ -124,6 +145,7 @@ beforeEach(() => {
 	vi.setSystemTime(NOW);
 	mockColumnGeometry();
 	localStorage.clear();
+	sessionStorage.clear();
 	results = {
 		abc: poll(),
 		closed: poll({ slug: 'closed', closedAt: '2026-10-08T21:59:59.999Z' }),
@@ -133,11 +155,17 @@ beforeEach(() => {
 			slots: [slot('s1', S1)],
 		}),
 		open: poll({ slug: 'open', votePolicy: 'open' }),
+		locked: poll({ slug: 'locked', hasPassword: true }),
 	};
 	realFetch = globalThis.$fetch;
+	gate = Promise.resolve();
 	answer = () => Promise.resolve({ id: 'p2', editToken: 'tok-bob' });
 	fetchSpy = vi.fn((url: string, options?: object) =>
-		isWrite(url) ? answer(url) : realFetch(url, options),
+		isWrite(url)
+			? answer(url)
+			: withPassword(options)
+				? gate.then(() => realFetch(url, options))
+				: realFetch(url, options),
 	);
 	vi.stubGlobal(
 		'$fetch',
@@ -179,6 +207,70 @@ describe('Vote page: loading', () => {
 		expect(wrapper!.text()).toContain('Réunion d’équipe');
 		expect(statuses()).toEqual(['none', 'none']);
 		expect(wrapper!.find('[data-editing]').exists()).toBe(false);
+	});
+});
+
+describe('Vote page: protected poll', () => {
+	const unlock = async (password: string) => {
+		await wrapper!.find('[data-password-input]').setValue(password);
+		await wrapper!.find('[data-password-prompt] form').trigger('submit');
+		await flushPromises();
+	};
+
+	it('asks for the password before showing anything', async () => {
+		await mountPage('/poll/locked');
+
+		expect(wrapper!.find('[data-password-prompt]').exists()).toBe(true);
+		expect(wrapper!.text()).not.toContain('Réunion d’équipe');
+		expect(slotBlocks()).toHaveLength(0);
+	});
+
+	it('says when the password is wrong, then opens with the right one', async () => {
+		await mountPage('/poll/locked');
+
+		await unlock('sesame');
+		await vi.waitFor(() =>
+			expect(wrapper!.find('[data-password-error]').exists()).toBe(true),
+		);
+
+		await unlock('sésame');
+		await vi.waitFor(() =>
+			expect(wrapper!.find('[data-password-prompt]').exists()).toBe(
+				false,
+			),
+		);
+		expect(wrapper!.text()).toContain('Réunion d’équipe');
+		expect(slotBlocks()).toHaveLength(2);
+	});
+
+	it('loads with a password kept from earlier, showing the page frame', async () => {
+		sessionStorage.setItem('creno:password:locked', 'sésame');
+		const release = holdReads();
+		await mountPage('/poll/locked');
+
+		await vi.waitFor(() =>
+			expect(wrapper!.find('[data-skeleton-page]').exists()).toBe(true),
+		);
+		expect(wrapper!.find('[data-skeleton-participants]').exists()).toBe(
+			true,
+		);
+		expect(wrapper!.find('[data-skeleton-calendar]').exists()).toBe(true);
+		expect(wrapper!.text()).not.toContain('Impossible de charger');
+
+		release();
+		await vi.waitFor(() =>
+			expect(wrapper!.text()).toContain('Réunion d’équipe'),
+		);
+		expect(wrapper!.find('[data-skeleton-page]').exists()).toBe(false);
+	});
+
+	it('sends nothing until a password is typed', async () => {
+		await mountPage('/poll/locked');
+
+		const button = wrapper!.find(
+			'[data-password-prompt] button[type="submit"]',
+		);
+		expect(button.attributes('disabled')).toBeDefined();
 	});
 });
 
@@ -260,14 +352,12 @@ describe('Vote page: a new answer', () => {
 			},
 		});
 		await vi.waitFor(() =>
-			expect(document.body.textContent).toContain(
-				'Merci, votre réponse est enregistrée',
-			),
+			expect(stored().abc).toEqual({
+				participantId: 'p2',
+				editToken: 'tok-bob',
+			}),
 		);
-		expect(stored().abc).toEqual({
-			participantId: 'p2',
-			editToken: 'tok-bob',
-		});
+		expect(document.body.textContent).not.toContain('Merci');
 
 		await vi.waitFor(() => expect(nameInput().element.value).toBe('Bob'));
 		// Back to the shared view: Bob's choices are in the tally, not the colours
@@ -388,11 +478,6 @@ describe('Vote page: changing one’s own answer', () => {
 				{ slotId: 's2', status: 'yes' },
 			]),
 		);
-		await vi.waitFor(() =>
-			expect(document.body.textContent).toContain(
-				'Votre réponse est modifiée',
-			),
-		);
 	});
 
 	it('forgets a token the server refuses and starts over', async () => {
@@ -454,7 +539,7 @@ describe('Vote page: open policy', () => {
 		const [url, options] = writes()[0]!;
 		expect(url).toBe('/api/polls/open/participants/p1');
 		expect(options.method).toBe('PUT');
-		expect(options.headers).toBeUndefined();
+		expect(options.headers).toEqual({});
 	});
 
 	it('goes back to a new answer on cancel', async () => {

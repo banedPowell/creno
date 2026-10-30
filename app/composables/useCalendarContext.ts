@@ -27,6 +27,8 @@ const [useProvideCalendarContext, useInjectCalendarContext] =
 			const vote = options.vote ?? null;
 
 			const highlightedSlotId = shallowRef<string | null>(null);
+			// A bar split across month rows is several chips; they share this
+			const hoveredSlotId = shallowRef<string | null>(null);
 			const { start: clearLater, stop: keepHighlight } = useTimeoutFn(
 				() => (highlightedSlotId.value = null),
 				REVEAL_DURATION,
@@ -78,10 +80,15 @@ const [useProvideCalendarContext, useInjectCalendarContext] =
 				slots,
 				calendar,
 				slotActions,
-				draft: vote ? { ...draft, onGridPointerdown: () => {} } : draft,
+				// Picking a slot to keep still lets the organiser draw and move slots
+				draft:
+					vote && !vote.picking
+						? { ...draft, onGridPointerdown: () => {} }
+						: draft,
 				now,
 				vote,
 				highlightedSlotId,
+				hoveredSlotId,
 				revealSlot,
 				bestSlots,
 				bestIndex,

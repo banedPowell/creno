@@ -13,6 +13,10 @@ export const createParticipantWithVotes = vi.fn();
 export const getHeader = vi.fn();
 export const requireParticipant = vi.fn();
 export const updateParticipantWithVotes = vi.fn();
+export const hasParticipantToken = vi.fn();
+export const updatePollSettings = vi.fn();
+export const replacePollSlots = vi.fn();
+export const deletePoll = vi.fn();
 
 export function createError(opts: { statusCode: number; message: string }) {
 	const err = new Error(opts.message) as Error & { statusCode: number };

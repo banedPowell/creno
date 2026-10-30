@@ -36,6 +36,13 @@ export interface CalendarVoteState {
 	readonly: Readonly<Ref<boolean>>;
 	focusedParticipantId: Readonly<Ref<string | null>>;
 	cycleVote: (slotId: string) => void;
+	// The slot the organiser settled on
+	chosenSlotId?: Readonly<Ref<string | null>>;
+	// The organiser picking that slot: a click selects instead of voting
+	picking?: {
+		selectedId: Readonly<Ref<string | null>>;
+		select: (slotId: string) => void;
+	};
 }
 
 export interface CalendarViewOptions {

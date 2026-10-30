@@ -30,6 +30,16 @@ export const pollsTable = sqliteTable('polls', {
 	votePolicy: text('vote_policy', { enum: VOTE_POLICIES })
 		.notNull()
 		.default('token'),
+	// Answers stay hidden from a visitor until they have sent their own
+	hideResults: integer('hide_results', { mode: 'boolean' })
+		.notNull()
+		.default(false),
+	// Salted scrypt hash, never sent out: the public API only says whether one
+	// is set
+	passwordHash: text('password_hash'),
+	// The slot the organiser settled on, plain text rather than a foreign key
+	// so adding it stays a simple ALTER TABLE
+	chosenSlotId: text('chosen_slot_id'),
 });
 
 export const slotsTable = sqliteTable('slots', {

@@ -1,0 +1,19 @@
+meta {
+  name: Get admin
+  type: http
+  seq: 6
+}
+
+get {
+  url: {{baseUrl}}/api/polls/{{slug}}/admin
+  body: none
+  auth: inherit
+}
+
+headers {
+  x-creno-admin: {{adminToken}}
+}
+
+docs {
+  Toutes les réponses, même masquées. 403 sans le bon token admin.
+}

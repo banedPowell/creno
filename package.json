@@ -5,7 +5,7 @@
 	"scripts": {
 		"build": "nuxt build",
 		"dev": "nuxt dev",
-		"dev:fullstack": "pnpm i && pnpm approve-builds && pnpm drizzle:generate && pnpm drizzle:migrate && pnpm nuxt dev --dotenv .env --https --host",
+		"dev:fullstack": "pnpm i && pnpm approve-builds && pnpm drizzle:generate && pnpm drizzle:migrate && pnpm nuxt dev --dotenv .env --host",
 		"drizzle:studio": "drizzle-kit studio",
 		"drizzle:generate": "drizzle-kit generate",
 		"drizzle:migrate": "drizzle-kit migrate",
@@ -31,7 +31,7 @@
 		"@internationalized/date": "^3.11.0",
 		"@libsql/client": "^0.17.0",
 		"@nuxt/eslint": "1.15.2",
-		"@nuxt/ui": "4.5.0",
+		"@nuxt/ui": "4.12.0",
 		"@vueuse/core": "^14.2.1",
 		"@vueuse/nuxt": "^14.2.1",
 		"dotenv": "^17.3.1",

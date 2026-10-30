@@ -17,8 +17,11 @@
 	}>();
 
 	const { slots, calendar, draft, vote } = useCalendarContext();
+	const answering = computed(() => !!vote && !vote.picking);
 
-	const SlotChip = vote ? CalendarVoteChip : CalendarSlotChip;
+	const SlotChip = computed(() =>
+		answering.value ? CalendarVoteChip : CalendarSlotChip,
+	);
 
 	const days = computed(() =>
 		eachDay(props.weekStart, 7).map((date) => toCalendarDay(date)),
@@ -133,7 +136,7 @@
 			:class="[
 				index !== 0 && 'border-l',
 				day.isPast && 'bg-muted/50',
-				vote || day.isPast ? 'cursor-default' : 'cursor-cell',
+				answering || day.isPast ? 'cursor-default' : 'cursor-cell',
 			]"
 			:style="{ gridColumn: index + 1 }"
 			@pointerdown="

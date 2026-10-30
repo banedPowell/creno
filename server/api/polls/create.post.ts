@@ -1,3 +1,19 @@
+import {
+	pollPasswordSchema,
+	votePolicySchema,
+} from '../../../shared/utils/pollSettings';
+
+const firstIssue = (result: {
+	success: boolean;
+	error?: { issues: { message: string }[] };
+}) => {
+	if (!result.success)
+		throw createError({
+			statusCode: 400,
+			message: result.error!.issues[0]!.message,
+		});
+};
+
 export default defineEventHandler(async (event) => {
 	const body = await readBody(event);
 
@@ -54,13 +70,27 @@ export default defineEventHandler(async (event) => {
 		});
 	}
 
-	const poll = await createPoll({
+	if (body.votePolicy !== undefined)
+		firstIssue(votePolicySchema.safeParse(body.votePolicy));
+	if (body.hideResults !== undefined && typeof body.hideResults !== 'boolean')
+		throw createError({
+			statusCode: 400,
+			message: 'hideResults doit être un booléen',
+		});
+	if (body.password !== undefined)
+		firstIssue(pollPasswordSchema.safeParse(body.password));
+
+	const { passwordHash, ...poll } = await createPoll({
 		title: body.title,
 		description: body.description,
 		closedAt,
 		slots: body.slots,
+		votePolicy: body.votePolicy,
+		hideResults: body.hideResults,
+		password: body.password,
 	});
 
 	setResponseStatus(event, 201);
-	return poll;
+	// The admin token goes back this once, the creator's browser keeps it
+	return { ...poll, hasPassword: !!passwordHash };
 });

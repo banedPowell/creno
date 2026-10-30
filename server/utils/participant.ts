@@ -52,6 +52,26 @@ export async function requireParticipant(
 	return participant;
 }
 
+// Whether the edit token handed out on voting belongs to someone in this poll
+export async function hasParticipantToken(
+	pollId: string,
+	token: string | undefined,
+) {
+	if (!token) return false;
+	const db = useDrizzle();
+	const participant = await db
+		.select({ id: participantsTable.id })
+		.from(participantsTable)
+		.where(
+			and(
+				eq(participantsTable.pollId, pollId),
+				eq(participantsTable.editToken, token),
+			),
+		)
+		.get();
+	return !!participant;
+}
+
 const voteRows = (participantId: string, votes: VoteInput[]) =>
 	votes.map((vote) => ({
 		id: nanoid(),

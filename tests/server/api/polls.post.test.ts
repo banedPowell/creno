@@ -109,7 +109,7 @@ describe('POST /api/polls/create', () => {
 			}),
 		);
 		expect(setResponseStatus).toHaveBeenCalledWith(mockEvent, 201);
-		expect(result).toEqual(mockPoll);
+		expect(result).toEqual({ ...mockPoll, hasPassword: false });
 	});
 
 	it('crée un poll avec closedAt explicite', async () => {
@@ -139,6 +139,61 @@ describe('POST /api/polls/create', () => {
 			slots,
 		});
 		expect(setResponseStatus).toHaveBeenCalledWith(mockEvent, 201);
-		expect(result).toEqual(mockPoll);
+		expect(result).toEqual({ ...mockPoll, hasPassword: false });
+	});
+
+	it('transmet les options avancées sans renvoyer le hash', async () => {
+		const slots = [
+			{
+				start: '2030-01-01T09:00:00.000Z',
+				end: '2030-01-01T10:00:00.000Z',
+			},
+		];
+		vi.mocked(readBody).mockResolvedValue({
+			title: 'Test',
+			slots,
+			votePolicy: 'open',
+			hideResults: true,
+			password: 'sesame',
+		});
+		vi.mocked(createPoll).mockResolvedValue({
+			id: 'poll-1',
+			passwordHash: 'scrypt:x:y',
+		});
+
+		const handler = (await import('../../../server/api/polls/create.post'))
+			.default;
+		const result = await handler(mockEvent);
+
+		expect(createPoll).toHaveBeenCalledWith(
+			expect.objectContaining({
+				votePolicy: 'open',
+				hideResults: true,
+				password: 'sesame',
+			}),
+		);
+		expect(result).toEqual({ id: 'poll-1', hasPassword: true });
+	});
+
+	it.each([
+		[{ votePolicy: 'admin' }, 'Politique de vote invalide'],
+		[{ hideResults: 'oui' }, 'hideResults doit être un booléen'],
+		[{ password: 'ab' }, 'au moins 4 caractères'],
+	])('refuse des options invalides (%o)', async (options, message) => {
+		vi.mocked(readBody).mockResolvedValue({
+			title: 'Test',
+			slots: [
+				{
+					start: '2030-01-01T09:00:00.000Z',
+					end: '2030-01-01T10:00:00.000Z',
+				},
+			],
+			...options,
+		});
+
+		const handler = (await import('../../../server/api/polls/create.post'))
+			.default;
+
+		await expect(handler(mockEvent)).rejects.toThrow(message);
 	});
 });

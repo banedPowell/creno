@@ -1,0 +1,26 @@
+meta {
+  name: Choose slot
+  type: http
+  seq: 8
+}
+
+patch {
+  url: {{baseUrl}}/api/polls/{{slug}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  x-creno-admin: {{adminToken}}
+}
+
+body:json {
+  {
+    "chosenSlotId": "{{slotId2}}"
+  }
+}
+
+docs {
+  Retient un créneau et clôture le Creno. `{ "chosenSlotId": null }` annule le choix,
+  `{ "closedAt": "now" }` clôture sans rien retenir.
+}

@@ -1,15 +1,8 @@
 <script setup lang="ts">
-	const props = defineProps<{
+	defineProps<{
 		title: string;
 		description?: string | null;
-		slotCount: number;
-		closedAt: string | Date;
 	}>();
-
-	const details = computed(
-		() =>
-			`${props.slotCount} créneau${props.slotCount > 1 ? 'x' : ''} · clôture le ${formatFullDate(new Date(props.closedAt))}`,
-	);
 </script>
 
 <template>
@@ -24,11 +17,5 @@
 				{{ description }}
 			</p>
 		</div>
-
-		<p
-			class="bg-elevated text-muted w-fit rounded-xl px-3 py-1.5 text-sm tabular-nums"
-		>
-			{{ details }}
-		</p>
 	</header>
 </template>

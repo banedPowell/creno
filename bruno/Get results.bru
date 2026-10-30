@@ -10,6 +10,12 @@ get {
   auth: inherit
 }
 
-vars:pre-request {
-  slug: REPLACE_ME
+headers {
+  ~x-creno-password: {{password}}
+  ~x-creno-token: {{editToken}}
+}
+
+docs {
+  Avec `hideResults`, les réponses restent masquées jusqu'à la clôture,
+  sauf pour qui a déjà voté (`x-creno-token`).
 }
