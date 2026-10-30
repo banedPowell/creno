@@ -1,0 +1,37 @@
+name: Fonctionnalité
+description: Un besoin utilisateur à couvrir
+title: 'feat: '
+labels: ['type:feature']
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: Besoin
+      description: Qui en a besoin, et pourquoi ? Le problème plutôt que la solution.
+      placeholder: En tant qu'organisateur, je veux… afin de…
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Critères d'acceptation
+      description: Ce qui doit être vrai pour considérer l'issue terminée.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes techniques
+      description: Approche envisagée, fichiers concernés, alternatives écartées.
+  - type: dropdown
+    id: flag
+    attributes:
+      label: Feature flag
+      description: Faut-il la livrer cachée tant qu'elle n'est pas terminée ?
+      options:
+        - Non, livrée en une seule PR
+        - Oui, derrière un flag
+    validations:
+      required: true

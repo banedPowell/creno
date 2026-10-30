@@ -1,0 +1,15 @@
+# Sections of the notes GitHub generates for each release, from PR labels
+changelog:
+  exclude:
+    labels: ['skip-changelog']
+  categories:
+    - title: Nouveautés
+      labels: ['type:feature']
+    - title: Corrections
+      labels: ['type:bug']
+    - title: Performance
+      labels: ['type:perf']
+    - title: Dépendances
+      labels: ['dependencies']
+    - title: Maintenance
+      labels: ['*']
