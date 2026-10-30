@@ -1,6 +1,5 @@
 name: Bug
 description: Un comportement incorrect ou inattendu
-title: 'fix: '
 labels: ['type:bug']
 body:
   - type: textarea
