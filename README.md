@@ -36,9 +36,11 @@ cp .env.example .env   # puis renseigner TURSO_DATABASE_URL et TURSO_AUTH_TOKEN
 ## Workflow Git
 
 - `main` : production. `dev` : intégration. Les deux sont protégées (PR obligatoire, CI verte, pas de force push).
-- Une branche par sujet depuis `dev` : `feat/...`, `fix/...`, `chore/...`, puis PR vers `dev`.
-- `dev` est fusionnée dans `main` par PR pour livrer.
-- Messages de commit au format [Conventional Commits](https://www.conventionalcommits.org/) (`feat: ...`, `fix: ...`), vérifiés par commitlint.
+- Une issue, puis une branche depuis `dev` : `feat/...`, `fix/...`, `chore/...`, puis PR squashée vers `dev`.
+- `dev` est fusionnée dans `main` par PR pour livrer : une release versionnée est publiée automatiquement.
+- Messages de commit et titres de PR au format [Conventional Commits](https://www.conventionalcommits.org/) (`feat: ...`, `fix: ...`), vérifiés par commitlint et en CI.
+
+La méthode complète (issues, PR, review, feature flags, release) est dans [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ### Hooks Git
 
@@ -47,7 +49,7 @@ cp .env.example .env   # puis renseigner TURSO_DATABASE_URL et TURSO_AUTH_TOKEN
 
 ### CI
 
-GitHub Actions (`.github/workflows/ci.yml`) exécute format, lint, typecheck, tests et build sur chaque PR et chaque push sur `main`/`dev`. Dependabot propose chaque semaine les mises à jour de dépendances vers `dev`.
+GitHub Actions (`.github/workflows/ci.yml`) exécute format, lint, typecheck, tests et build sur chaque PR et chaque push sur `main`/`dev`. Dependabot propose chaque semaine les mises à jour de dépendances vers `dev`, et les mineures sont fusionnées automatiquement une fois la CI verte.
 
 ## Éditeur
 
