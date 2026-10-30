@@ -1,0 +1,21 @@
+meta {
+  name: Get results
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/polls/{{slug}}/results
+  body: none
+  auth: inherit
+}
+
+headers {
+  ~x-creno-password: {{password}}
+  ~x-creno-token: {{editToken}}
+}
+
+docs {
+  Avec `hideResults`, les réponses restent masquées jusqu'à la clôture,
+  sauf pour qui a déjà voté (`x-creno-token`).
+}

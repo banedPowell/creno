@@ -1,0 +1,19 @@
+name: Tâche technique
+description: Outillage, refactor, CI, dépendances, documentation
+labels: ['type:chore']
+body:
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexte
+      description: Pourquoi cette tâche, maintenant ?
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Critères d'acceptation
+      value: |
+        - [ ]
+    validations:
+      required: true

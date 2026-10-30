@@ -1,0 +1,75 @@
+name: PR
+
+# pull_request_target so labels can be written on Dependabot and fork PRs too.
+# Nothing here checks out the PR code.
+on:
+  pull_request_target:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  title:
+    name: PR title
+    runs-on: ubuntu-latest
+    steps:
+      # The title becomes the squashed commit, which the release reads
+      - name: Check Conventional Commits format
+        uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          types: |
+            feat
+            fix
+            perf
+            refactor
+            style
+            test
+            docs
+            build
+            ci
+            chore
+            revert
+          subjectPattern: ^(?![A-Z]).+$
+          subjectPatternError: Le sujet « {subject} » doit commencer par une minuscule.
+
+  labels:
+    name: Labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Label by changed files
+        uses: actions/labeler@v6
+        with:
+          sync-labels: false
+
+      - name: Label by title type
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const types = {
+              feat: 'type:feature',
+              fix: 'type:bug',
+              perf: 'type:perf',
+              refactor: 'type:refactor',
+              style: 'type:refactor',
+              test: 'type:test',
+              docs: 'type:docs',
+              ci: 'type:ci',
+              build: 'type:chore',
+              chore: 'type:chore',
+              revert: 'type:bug',
+            };
+            const pr = context.payload.pull_request;
+            const type = pr.title.match(/^(\w+)(\(.+\))?!?:/)?.[1];
+            const wanted = types[type];
+            const issue = { ...context.repo, issue_number: pr.number };
+
+            // A retitled PR drops the type label it no longer matches
+            for (const { name } of pr.labels)
+              if (name.startsWith('type:') && name !== wanted)
+                await github.rest.issues.removeLabel({ ...issue, name });
+            if (wanted)
+              await github.rest.issues.addLabels({ ...issue, labels: [wanted] });

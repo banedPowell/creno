@@ -1,0 +1,88 @@
+{
+	"name": "creno",
+	"type": "module",
+	"private": true,
+	"license": "PolyForm-Noncommercial-1.0.0",
+	"scripts": {
+		"build": "nuxt build",
+		"dev": "nuxt dev",
+		"dev:fullstack": "pnpm i && pnpm approve-builds && pnpm drizzle:generate && pnpm drizzle:migrate && pnpm nuxt dev --dotenv .env --host",
+		"drizzle:studio": "drizzle-kit studio",
+		"drizzle:generate": "drizzle-kit generate",
+		"drizzle:migrate": "drizzle-kit migrate",
+		"drizzle:push": "drizzle-kit push",
+		"drizzle:pull": "drizzle-kit pull",
+		"generate": "nuxt generate",
+		"preview": "nuxt preview",
+		"postinstall": "nuxt prepare",
+		"test": "vitest",
+		"test:run": "vitest run",
+		"test:server": "vitest --project server",
+		"test:app": "vitest --project app",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix",
+		"format": "prettier --check .",
+		"format:fix": "prettier --write .",
+		"typecheck": "nuxt typecheck",
+		"check": "pnpm i && pnpm format && pnpm lint && pnpm typecheck && pnpm test:run",
+		"fix": "pnpm format:fix && pnpm lint:fix",
+		"prepare": "simple-git-hooks"
+	},
+	"dependencies": {
+		"@compodium/nuxt": "0.1.0-beta.14",
+		"@internationalized/date": "^3.12.4",
+		"@libsql/client": "^0.18.0",
+		"@nuxt/eslint": "1.17.0",
+		"@nuxt/ui": "4.12.0",
+		"@vueuse/core": "^14.4.0",
+		"@vueuse/nuxt": "^14.4.0",
+		"dotenv": "^17.4.2",
+		"drizzle-orm": "^0.45.4",
+		"nanoid": "^5.1.16",
+		"nuxt": "^4.6.3",
+		"uqr": "^0.1.3",
+		"vue": "^3.5.44",
+		"vue-router": "^5.4.0",
+		"web-haptics": "^0.0.6",
+		"zod": "^4.6.7"
+	},
+	"devDependencies": {
+		"@commitlint/cli": "^21.2.4",
+		"@commitlint/config-conventional": "^21.2.4",
+		"@nuxt/test-utils": "^4.3.4",
+		"@vue/test-utils": "^2.5.1",
+		"drizzle-kit": "^0.31.11",
+		"eslint": "^10.14.0",
+		"eslint-plugin-prettier": "^5.5.7",
+		"happy-dom": "^21.0.4",
+		"lint-staged": "^17.6.0",
+		"prettier": "^3.9.10",
+		"prettier-plugin-tailwindcss": "^0.7.4",
+		"simple-git-hooks": "^2.14.0",
+		"tailwindcss": "^4.3.3",
+		"typescript": "^5.9.3",
+		"vitest": "^4.1.12",
+		"vue-tsc": "^3.3.14"
+	},
+	"simple-git-hooks": {
+		"pre-commit": "pnpm exec lint-staged",
+		"commit-msg": "pnpm exec commitlint --edit \"$1\""
+	},
+	"lint-staged": {
+		"*.{ts,mjs,vue}": [
+			"eslint --fix"
+		],
+		"*.{json,css,yml,yaml}": [
+			"prettier --write"
+		]
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	},
+	"engines": {
+		"node": ">=22.12"
+	},
+	"packageManager": "pnpm@10.30.3"
+}

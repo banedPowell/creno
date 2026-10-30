@@ -1,0 +1,19 @@
+meta {
+  name: Get poll
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{baseUrl}}/api/polls/{{slug}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  ~x-creno-password: {{password}}
+}
+
+docs {
+  Activer `x-creno-password` (mot encodé en URI) pour un Creno protégé.
+}

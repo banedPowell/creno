@@ -1,0 +1,37 @@
+meta {
+  name: Vote
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/polls/{{slug}}/vote
+  body: json
+  auth: inherit
+}
+
+headers {
+  ~x-creno-password: {{password}}
+}
+
+body:json {
+  {
+    "name": "Alice",
+    "votes": [
+      { "slotId": "{{slotId1}}", "status": "yes" },
+      { "slotId": "{{slotId2}}", "status": "maybe" }
+    ]
+  }
+}
+
+script:post-response {
+  // The edit token lets Alice change her answer later
+  if (res.status === 201) {
+    bru.setVar("participantId", res.body.id);
+    bru.setVar("editToken", res.body.editToken);
+  }
+}
+
+docs {
+  `status` : `yes` | `maybe`, un créneau absent vaut non. Répond 410 une fois le Creno fermé.
+}
