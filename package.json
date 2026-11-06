@@ -35,7 +35,7 @@
 		"@nuxt/eslint": "1.17.0",
 		"@nuxt/ui": "4.12.0",
 		"@vueuse/core": "^14.4.0",
-		"@vueuse/nuxt": "^14.4.0",
+		"@vueuse/nuxt": "^15.0.0",
 		"dotenv": "^17.4.2",
 		"drizzle-orm": "^0.45.4",
 		"nanoid": "^5.1.16",
