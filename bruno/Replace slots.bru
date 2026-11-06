@@ -1,0 +1,30 @@
+meta {
+  name: Replace slots
+  type: http
+  seq: 10
+}
+
+put {
+  url: {{baseUrl}}/api/polls/{{slug}}/slots
+  body: json
+  auth: inherit
+}
+
+headers {
+  x-creno-admin: {{adminToken}}
+}
+
+body:json {
+  {
+    "slots": [
+      { "id": "{{slotId1}}", "start": "2026-12-07T09:30:00.000Z", "end": "2026-12-07T10:30:00.000Z" },
+      { "start": "2026-12-09T09:00:00.000Z", "end": "2026-12-09T10:00:00.000Z" }
+    ]
+  }
+}
+
+docs {
+  La liste complète : un créneau avec `id` est déplacé et garde ses votes,
+  un créneau sans `id` est ajouté, un créneau absent est supprimé avec ses votes.
+  Entre 1 et 100 créneaux, 15 minutes minimum chacun.
+}

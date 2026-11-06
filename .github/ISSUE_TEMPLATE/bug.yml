@@ -1,0 +1,37 @@
+name: Bug
+description: Un comportement incorrect ou inattendu
+title: 'fix: '
+labels: ['type:bug']
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Ce qui se passe
+      description: Le comportement observé, avec le message d'erreur s'il y en a un.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ce qui devrait se passer
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: |
+        1. Créer un sondage avec…
+        2. Ouvrir le lien de vote…
+        3. …
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environnement
+      placeholder: production / preview / local · navigateur · mobile ou desktop
+  - type: textarea
+    id: context
+    attributes:
+      label: Captures, logs, pistes

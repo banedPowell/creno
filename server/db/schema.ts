@@ -1,0 +1,101 @@
+import { sqliteTable, integer, text, check } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+import { nanoid } from 'nanoid';
+
+export const VOTE_POLICIES = ['token', 'open'] as const;
+export type VotePolicy = (typeof VOTE_POLICIES)[number];
+
+// No CHECK on vote_policy: adding one makes drizzle-kit rebuild the table and
+// copy a column the old one does not have yet
+export const pollsTable = sqliteTable('polls', {
+	id: text('id').primaryKey(),
+	title: text('title').notNull(),
+	description: text('description'),
+	slug: text('slug')
+		.notNull()
+		.unique()
+		.$defaultFn(() => nanoid(12)),
+	adminToken: text('admin_token')
+		.notNull()
+		.unique()
+		.$defaultFn(() => nanoid(32)),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date()),
+	closedAt: integer('closed_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)),
+	// Who may change an answer: its author only, through the token handed
+	// out on voting, or anyone
+	votePolicy: text('vote_policy', { enum: VOTE_POLICIES })
+		.notNull()
+		.default('token'),
+	// Answers stay hidden from a visitor until they have sent their own
+	hideResults: integer('hide_results', { mode: 'boolean' })
+		.notNull()
+		.default(false),
+	// Salted scrypt hash, never sent out: the public API only says whether one
+	// is set
+	passwordHash: text('password_hash'),
+	// The slot the organiser settled on, plain text rather than a foreign key
+	// so adding it stays a simple ALTER TABLE
+	chosenSlotId: text('chosen_slot_id'),
+});
+
+export const slotsTable = sqliteTable('slots', {
+	id: text('id')
+		.primaryKey()
+		.$defaultFn(() => nanoid(12)),
+	pollId: text('poll_id')
+		.notNull()
+		.references(() => pollsTable.id, { onDelete: 'cascade' }),
+	startTime: integer('start_time', { mode: 'timestamp' }).notNull(),
+	duration: integer('duration').notNull(),
+});
+
+export const participantsTable = sqliteTable('participants', {
+	id: text('id').primaryKey(),
+	name: text('name').notNull(),
+	pollId: text('poll_id')
+		.notNull()
+		.references(() => pollsTable.id, { onDelete: 'cascade' }),
+	// Proves who wrote the answer. Nullable: SQLite cannot add a NOT NULL
+	// column without a constant default, so rows from before it have none
+	editToken: text('edit_token').$defaultFn(() => nanoid(32)),
+	createdAt: integer('created_at', { mode: 'timestamp' })
+		.notNull()
+		.$defaultFn(() => new Date()),
+});
+
+export const votesTable = sqliteTable(
+	'votes',
+	{
+		id: text('id').primaryKey(),
+		participantId: text('participant_id')
+			.notNull()
+			.references(() => participantsTable.id, { onDelete: 'cascade' }),
+		slotId: text('slot_id')
+			.notNull()
+			.references(() => slotsTable.id, { onDelete: 'cascade' }),
+		status: text('status', { enum: ['yes', 'maybe'] })
+			.notNull()
+			.default('yes'),
+	},
+	(table) => [
+		check('status_check', sql`${table.status} IN ('yes', 'maybe')`),
+	],
+);
+
+export type Poll = typeof pollsTable.$inferSelect;
+export type NewPoll = typeof pollsTable.$inferInsert;
+export type Slot = typeof slotsTable.$inferSelect;
+export type NewSlot = typeof slotsTable.$inferInsert;
+export type Participant = typeof participantsTable.$inferSelect;
+export type NewParticipant = typeof participantsTable.$inferInsert;
+export type Vote = typeof votesTable.$inferSelect;
+export type NewVote = typeof votesTable.$inferInsert;
+
+export type CreateSlotInput = {
+	start: string;
+	end: string;
+};

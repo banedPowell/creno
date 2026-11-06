@@ -1,0 +1,19 @@
+meta {
+  name: Delete poll
+  type: http
+  seq: 11
+}
+
+delete {
+  url: {{baseUrl}}/api/polls/{{slug}}
+  body: none
+  auth: inherit
+}
+
+headers {
+  x-creno-admin: {{adminToken}}
+}
+
+docs {
+  Supprime le Creno, ses créneaux, participants et votes. Répond 204.
+}

@@ -1,0 +1,33 @@
+meta {
+  name: Update settings
+  type: http
+  seq: 7
+}
+
+patch {
+  url: {{baseUrl}}/api/polls/{{slug}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  x-creno-admin: {{adminToken}}
+}
+
+body:json {
+  {
+    "title": "Point hebdo",
+    "description": null,
+    "votePolicy": "open",
+    "hideResults": true,
+    "password": "sésame"
+  }
+}
+
+docs {
+  Tous les champs sont optionnels, seuls ceux envoyés changent :
+  `title`, `description` (null l'efface), `closedAt` (ISO ou `now`),
+  `votePolicy`, `hideResults`, `password` (null retire la protection),
+  `chosenSlotId` (retenir un créneau clôture le Creno, null annule le choix).
+  Rouvrir le Creno oublie le créneau retenu.
+}

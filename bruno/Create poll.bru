@@ -1,0 +1,43 @@
+meta {
+  name: Create poll
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/polls/create
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "title": "Réunion d'équipe",
+    "description": "Trouvons un créneau pour notre prochaine réunion",
+    "closedAt": "2026-12-01T22:59:59.999Z",
+    "votePolicy": "token",
+    "hideResults": false,
+    "slots": [
+      { "start": "2026-12-07T09:00:00.000Z", "end": "2026-12-07T10:00:00.000Z" },
+      { "start": "2026-12-07T14:00:00.000Z", "end": "2026-12-07T15:00:00.000Z" },
+      { "start": "2026-12-08T10:00:00.000Z", "end": "2026-12-08T11:30:00.000Z" }
+    ]
+  }
+}
+
+script:post-response {
+  // The next requests pick up the poll, its admin token and its slots
+  if (res.status === 201) {
+    bru.setVar("slug", res.body.slug);
+    bru.setVar("adminToken", res.body.adminToken);
+    bru.setVar("slotId1", res.body.slots[0].id);
+    bru.setVar("slotId2", res.body.slots[1].id);
+    bru.setVar("slotId3", res.body.slots[2].id);
+  }
+}
+
+docs {
+  Optionnels : `description`, `closedAt` (3 jours par défaut, ISO ou timestamp en secondes),
+  `votePolicy` (`token` | `open`), `hideResults`, `password` (4 caractères minimum).
+  Le `adminToken` n'est renvoyé qu'ici.
+}

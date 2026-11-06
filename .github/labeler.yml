@@ -1,0 +1,36 @@
+'area:api':
+  - changed-files:
+      - any-glob-to-any-file: ['server/api/**', 'server/utils/**', 'shared/**']
+'area:ui':
+  - changed-files:
+      - any-glob-to-any-file:
+          [
+            'app/pages/**',
+            'app/components/poll/**',
+            'app/components/skeleton/**',
+            'app/layouts/**',
+            'app/assets/**',
+            'app/app.config.ts',
+          ]
+'area:calendar':
+  - changed-files:
+      - any-glob-to-any-file:
+          [
+            'app/components/calendar/**',
+            'app/utils/calendar*.ts',
+            'app/composables/useCalendar*.ts',
+            'app/composables/useSlot*.ts',
+          ]
+'area:db':
+  - changed-files:
+      - any-glob-to-any-file:
+          ['server/db/**', 'drizzle/**', 'drizzle.config.ts']
+'area:infra':
+  - changed-files:
+      - any-glob-to-any-file:
+          [
+            'nuxt.config.ts',
+            '.github/**',
+            'package.json',
+            'pnpm-workspace.yaml',
+          ]

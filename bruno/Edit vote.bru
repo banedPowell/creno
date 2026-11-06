@@ -1,0 +1,31 @@
+meta {
+  name: Edit vote
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/polls/{{slug}}/participants/{{participantId}}
+  body: json
+  auth: inherit
+}
+
+headers {
+  x-creno-token: {{editToken}}
+  ~x-creno-password: {{password}}
+}
+
+body:json {
+  {
+    "name": "Alice B.",
+    "votes": [
+      { "slotId": "{{slotId2}}", "status": "yes" },
+      { "slotId": "{{slotId3}}", "status": "maybe" }
+    ]
+  }
+}
+
+docs {
+  Remplace le nom et tous les votes. `x-creno-token` est exigé sauf avec `votePolicy: open`.
+  Répond 410 une fois le Creno fermé.
+}
